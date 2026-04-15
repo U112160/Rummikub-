@@ -1,0 +1,1606 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rummikub Plus</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+body { background: #e7eef9; color: #383c58; font-family: Georgia, serif; min-height: 100vh; padding: 12px; }
+.game-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.game-title { font-size: 20px; font-weight: bold; color: #4a5888; letter-spacing: 2px; }
+.scores { display: flex; gap: 5px; }
+.score-card { background: rgba(80,100,160,0.08); border: 1px solid #b8c8e8; border-radius: 5px; padding: 3px 8px; font-size: 13px; text-align: center; }
+.score-card.active { border-color: #7888b8; background: rgba(80,100,160,0.18); }
+.score-card .sname { color: #7888b8; font-size: 11px; }
+.score-card .scount { font-size: 15px; font-weight: bold; color: #4a5888; }
+.opponents { display: flex; gap: 6px; margin-bottom: 6px; }
+.opponent { background: rgba(180,200,230,0.35); border: 1px solid #c0cce8; border-radius: 5px; padding: 4px 7px; font-size: 13px; flex: 1; text-align: center; cursor: pointer; transition: border-color 0.15s; color: #383c58; }
+.opponent:hover { border-color: #7888b8; }
+.opponent.active-turn { border-color: #4a5888; background: rgba(160,185,225,0.45); }
+.opp-name { color: #4a68a8; font-size: 11px; font-weight: bold; }
+.opp-tiles { color: #4a5888; font-size: 14px; font-weight: bold; }
+.tile-back { width: 14px; height: 20px; border-radius: 2px; background: #dde5f5; border: 1px solid #ccd5ec; display: inline-block; }
+.board-area { background: rgba(210,225,248,0.75); border: 2px solid #8aaad8; border-radius: 8px; min-height: 340px; padding: 10px; margin-bottom: 6px; }
+.board-label { font-size: 13px; color: #4a68a8; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
+.sets-container { display: flex; flex-wrap: wrap; gap: 9px; min-height: 120px; align-content: flex-start; }
+.set-wrapper { display: flex; flex-direction: column; }
+.set-group { display: flex; gap: 2px; background: rgba(180,205,240,0.55); border: 1.5px solid #88aad8; border-radius: 5px; padding: 5px 6px; min-width: 34px; min-height: 54px; align-items: center; transition: border-color 0.15s; }
+.set-group.valid-set { border-color: #6a9a48; }
+.set-group.invalid-set { border-color: #88aad8; }
+.set-group.drag-over { border-color: #3055aa !important; background: rgba(60,100,200,0.10) !important; }
+.new-set-drop { min-width: 42px; min-height: 54px; border: 2px dashed #88aad8; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #7898cc; transition: all 0.15s; cursor: pointer; }
+.new-set-drop.drag-over { border-color: #3055aa; color: #3055aa; background: rgba(60,100,200,0.08); }
+.hand-area { background: rgba(240,245,255,0.70); border: 1px solid #b8c8e8; border-radius: 7px; padding: 7px; margin-bottom: 6px; }
+.hand-top { display: flex; align-items: center; gap: 5px; margin-bottom: 4px; flex-wrap: wrap; }
+.hand-label { font-size: 13px; color: #4a68a8; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
+.hand-tiles { display: flex; flex-wrap: wrap; gap: 3px; min-height: 50px; border-radius: 5px; padding: 3px; transition: background 0.15s; }
+.hand-tiles.drag-over { background: rgba(80,100,160,0.04); outline: 1px dashed #7080c0; border-radius: 5px; }
+.task-area { background: rgba(240,245,255,0.70); border: 1px solid #b8c8e8; border-radius: 7px; padding: 9px; margin-bottom: 6px; }
+.task-area-label { font-size: 13px; color: #6878a8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 7px; font-weight: bold; }
+.task-cards-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.task-card { background: rgba(180,200,230,0.35); border: 1px solid #c0cce8; border-radius: 5px; padding: 7px 10px; cursor: pointer; transition: border-color 0.15s; flex: 1; min-width: 100px; }
+.task-card:hover { border-color: #4a5888; }
+.task-card.done { border-color: #6a9a48; background: rgba(106,154,72,0.12); }
+.task-name { font-size: 14px; color: #4a5888; line-height: 1.5; white-space: normal; font-weight: bold; }
+.task-desc { font-size: 13px; color: #4a5888; line-height: 1.5; margin-top: 4px; }
+.task-clear { font-size: 16px; color: #4a5888; font-weight: bold; margin-top: 4px; letter-spacing: 2px; }
+.task-pending { display: none; }
+.task-progress { font-size: 12px; color: #5a6aaa; margin-top: 2px; }
+/* Tiles */
+.tile { width: 32px; height: 46px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 900; border: 2px solid #88aad8; background: #f0f5ff; transition: transform 0.12s, box-shadow 0.12s; cursor: grab; flex-shrink: 0; }
+.tile:active { cursor: grabbing; }
+.tile.dragging { opacity: 0.25; }
+.tile.selected { transform: translateY(-6px); box-shadow: 0 4px 8px rgba(60,100,200,0.35); border-color: #3055aa; }
+.tile.red { color: #c41111; }
+.tile.blue { color: #1133bb; }
+.tile.orange { color: #cc8800; }
+.tile.black { color: #1a1008; }
+.tile.joker-tile { color: #6600cc; font-size: 15px; font-weight: 900; border-color: #b090e0; background: #e0c8ff; }
+.tile.from-hand-new { border-color: #4488dd; box-shadow: 0 0 4px rgba(60,130,220,0.40); }
+.tile.ai-placed { border-color: #2244aa; box-shadow: 0 0 6px rgba(30,60,180,0.55); }
+.tile.op-tile { background: #e0eaff; border-color: #7888cc; color: #332288; font-size: 17px; font-weight: 900; }
+.tile.eq-tile { background: #dff0e8; border-color: #60aa70; color: #1a5a28; font-size: 16px; font-weight: 900; }
+.controls { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 5px; }
+.btn { padding: 5px 10px; border: none; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold; transition: opacity 0.2s, transform 0.1s; font-family: Georgia, serif; }
+.btn:hover { opacity: 0.85; }
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: #4868a8; color: #f4f7fe; }
+.btn-danger { background: #aa3344; color: #f4f7fe; }
+.btn-secondary { background: #4868a8; color: #f4f7fe; }
+.btn-info { background: #4868a8; color: #f4f7fe; }
+.btn-end { background: #4868a8; color: #f4f7fe; }
+.btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.btn-large { font-size: 16px; padding: 6px 13px; }
+.msg-bar { background: rgba(240,245,255,0.80); border: 1px solid #c0cce8; border-radius: 4px; padding: 5px 11px; font-size: 14px; color: #4a5888; min-height: 26px; }
+.turn-ind { font-size: 13px; color: #4a5888; font-weight: bold; margin-left: auto; }
+.played-info { font-size: 12px; color: #6a9a48; font-weight: bold; }
+.sort-btn { font-size: 13px; padding: 3px 8px; background: rgba(80,100,160,0.08); border: 1px solid #b8c8e8; color: #4a5888; border-radius: 3px; cursor: pointer; font-weight: bold; }
+.sort-btn:hover { background: rgba(80,100,160,0.18); }
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(40,50,90,0.55); align-items: center; justify-content: center; z-index: 100; }
+.modal-overlay.show { display: flex; }
+.modal { background: #e7eef9; border: 2px solid #ccd5ec; border-radius: 10px; padding: 20px; text-align: center; max-width: 380px; width: 90%; max-height: 85vh; overflow-y: auto; color: #383c58; }
+.modal h3 { font-size: 18px; color: #4a5888; margin-bottom: 8px; }
+.modal p { color: #4a5888; margin-bottom: 12px; font-size: 12px; }
+.modal .stats { font-size: 11px; color: #7888b8; margin-bottom: 12px; line-height: 1.9; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="game-header">
+    <div class="game-title">RUMMIKUB +</div>
+    <div id="scores" class="scores"></div>
+  </div>
+  <div id="opponents" class="opponents"></div>
+  <div class="board-area">
+    <div class="board-label">桌面</div>
+    <div id="board-sets" class="sets-container"></div>
+  </div>
+  <div class="controls" id="controls"></div>
+  <div class="hand-area">
+    <div class="hand-top">
+      <div class="hand-label">手牌</div>
+      <button class="sort-btn" onclick="sortHand('color')">按顏色</button>
+      <button class="sort-btn" onclick="sortHand('number')">按數字</button>
+      <div class="turn-ind" id="turn-text"></div>
+      <div class="played-info" id="played-info"></div>
+    </div>
+    <div id="hand-tiles" class="hand-tiles"></div>
+  </div>
+  <div class="task-area">
+    <div class="task-area-label">我的任務</div>
+    <div id="task-list" class="task-cards-row"></div>
+    <div style="font-size:12px;color:#4a5888;margin-top:4px;font-weight:bold">點擊任務卡判定（僅判定本回合你新放上去的牌）</div>
+  </div>
+  <div id="msg-bar" class="msg-bar">遊戲開始！首次出牌需30分以上（數字牌＋運算式均可計入）。</div>
+</div>
+<div id="modal-overlay" class="modal-overlay">
+  <div class="modal" id="modal-box"></div>
+</div>
+<script>
+const COLORS=['red','blue','orange','black'];
+// 等號改成8張，功能牌機率較低
+const OP_COUNTS={'+':5,'-':5,'×':3,'÷':3,'=':8};
+// 刪除「用乘法」任務，只保留兩個
+const ALL_TASKS=[
+  {id:'even_sum', name:'打出一個組合\n數字總和為偶數', desc:'你新放上桌的牌中，有一個合法組合點數總和/結果為偶數'},
+  {id:'two_expr',  name:'累計做出兩個運算式', desc:'累計跨回合：你出的算式累積達2個（可分多回合完成）', target:2},
+];
+let G={}, dragState=null, jokerPending=null;
+
+/* ══════════ INIT ══════════ */
+function initGame(){
+  let pool=[], id=0;
+  for(let s=0;s<2;s++) for(let c of COLORS) for(let n=1;n<=13;n++)
+    pool.push({id:id++,color:c,number:n,isJoker:false,isOp:false});
+  pool.push({id:id++,color:'joker',number:0,isJoker:true,isOp:false});
+  pool.push({id:id++,color:'joker',number:0,isJoker:true,isOp:false});
+  for(const [op,cnt] of Object.entries(OP_COUNTS))
+    for(let i=0;i<cnt;i++) pool.push({id:id++,color:'op',number:0,isJoker:false,isOp:true,op});
+  shuffle(pool);
+  const ts=shuffle([...ALL_TASKS]);
+  let players=[];
+  for(let i=0;i<3;i++){
+    const def=ts[i % ts.length];
+    const myTask={...def, done:false, progress:0};
+    players.push({name:i===0?'你':['電腦1','電腦2'][i-1], hand:pool.splice(0,14), hasPlayed:false, tasks:[myTask], revealHand:false});
+  }
+  G={pool, players, boardSets:[], currentPlayer:0, selectedTiles:[],
+     turnBackup:null, newTilesOnBoard:[], aiPlacedThisRound:new Set(),
+     playerPlacedIds:new Set(), gameOver:false};
+  jokerPending=null;
+  hideModal(); render();
+  setMsg('遊戲開始！首次出牌需30分以上（數字牌＋運算式均可計入）。','info');
+}
+function shuffle(a){for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function clone(x){return JSON.parse(JSON.stringify(x));}
+function showModal(h){document.getElementById('modal-box').innerHTML=h;document.getElementById('modal-overlay').classList.add('show');}
+function hideModal(){document.getElementById('modal-overlay').classList.remove('show');document.getElementById('modal-box').innerHTML='';}
+document.getElementById('modal-overlay').addEventListener('click',function(e){if(e.target===this)hideModal();});
+
+/* ══════════ VALIDATION ══════════ */
+function isValidSet(tiles){
+  if(!tiles||tiles.length<3) return false;
+  // 只要含 = 就走算式邏輯
+  if(tiles.some(t=>t.isOp&&t.op==='=')) return isValidExpr(tiles);
+  if(tiles.some(t=>t.isOp)) return false;
+  return isValidRummikub(tiles);
+}
+function isValidRummikub(tiles){
+  const real=tiles.filter(t=>!t.isJoker);
+  if(real.length===0) return tiles.length>=3;
+  const nums=real.map(t=>t.number).sort((a,b)=>a-b);
+  const cols=real.map(t=>t.color);
+  if(new Set(nums).size===1)
+    return new Set(cols).size===cols.length&&tiles.length>=3&&tiles.length<=4;
+  if(new Set(cols).size===1){
+    if(new Set(nums).size!==nums.length) return false;
+    return (Math.max(...nums)-Math.min(...nums)+1)<=tiles.length&&tiles.length>=3;
+  }
+  return false;
+}
+/* 把一組牌的所有排列都試過，找到能組成合法算式的排列 */
+function permuteExprTiles(tiles){
+  // 只排列「數字牌+運算符」，等號固定插入；對於小牌組做全排列，大牌組做啟發式排序
+  const nums=tiles.filter(t=>!t.isOp);
+  const ops=tiles.filter(t=>t.isOp&&t.op!=='=');
+  const eqs=tiles.filter(t=>t.isOp&&t.op==='=');
+  if(eqs.length===0) return [tiles]; // no = means not an expr, return as-is
+
+  // For small sets try all permutations; for large sets return original + sorted attempts
+  const nonEq=[...nums,...ops];
+  if(nonEq.length<=6){
+    const perms=[];
+    function perm(arr,cur){
+      if(cur.length===arr.length){perms.push([...cur,...eqs]);return;}
+      for(let i=0;i<arr.length;i++){
+        if(cur.some(x=>x.id===arr[i].id)) continue;
+        cur.push(arr[i]);perm(arr,cur);cur.pop();
+      }
+    }
+    perm(nonEq,[]);
+    // Also try with eq in middle positions
+    const results=[];
+    for(const p of perms){
+      // Try inserting = at each position
+      for(let ei=1;ei<p.length;ei++){
+        const t=[...p.slice(0,ei),...eqs,...p.slice(ei)];
+        results.push(t);
+      }
+    }
+    return results;
+  }
+  // Large set: just return original order + a few heuristic orders
+  return [tiles];
+}
+
+function isValidExpr(tiles){
+  if(!tiles.some(t=>t.isOp&&t.op==='=')) return false;
+  // First try tiles as-is (for already-ordered tiles like from board/AI)
+  if(_tryExprOrder(tiles)) return true;
+  // Then try all permutations (for user-clicked tiles in arbitrary order)
+  const perms=permuteExprTiles(tiles);
+  return perms.some(p=>_tryExprOrder(p));
+}
+
+function _tryExprOrder(tiles){
+  const exprStr=tiles.map(t=>{
+    if(t.isJoker) return null;
+    if(t.isOp) return t.op;
+    return String(t.number);
+  }).join('');
+  if(exprStr.includes('null')) return false;
+  const parts=exprStr.split('=');
+  if(parts.length<2) return false;
+  try{
+    const vals=parts.map(p=>{
+      const s=p.replace(/×/g,'*').replace(/÷/g,'/');
+      if(!s) return null;
+      if(!/^[\d+\-*/]+$/.test(s)) return null;
+      if(/[+\-*/]{2,}/.test(s)) return null;
+      if(/^[+\-*/]/.test(s)||/[+\-*/]$/.test(s)) return null;
+      const v=Function('"use strict";return('+s+')')();
+      return Number.isFinite(v)&&Number.isInteger(v)?v:null;
+    });
+    if(vals.some(v=>v===null)) return false;
+    return vals.every(v=>v===vals[0]);
+  }catch(e){return false;}
+}
+
+/* 找到一個合法的排列，並回傳排列後的 tiles（用於出牌前排序） */
+function sortExprTiles(tiles){
+  if(!tiles.some(t=>t.isOp&&t.op==='=')) return tiles;
+  if(_tryExprOrder(tiles)) return tiles;
+  const perms=permuteExprTiles(tiles);
+  const valid=perms.find(p=>_tryExprOrder(p));
+  return valid||tiles;
+}
+
+/* ══════════ FIRST-MELD SCORE ══════════
+   計算本回合新放上桌的牌的分數：
+   - 包含新牌的數字組合：只計算新牌的面值
+   - 包含新牌的算式組合：整個算式等號左側的計算結果作為該組合的分數（因為一個算式是整體）
+*/
+/* ══════════ FIRST-MELD SCORE ══════════
+   首次出牌30分計算規則：
+   - 數字組合（純牌）：只計算本回合新放的牌面值
+   - 算式組合：計算算式中「所有數字牌的面值總和」
+     e.g. 8=7+1=8=4*2 → 8+7+1+8+4+2 = 30 ✓
+     e.g. 4+5=9 → 4+5+9 = 18
+   算式分數不以等號左側結果為準，而是所有數字牌面值加總
+*/
+function calcNewTilesScore(newIds, boardSets){
+  let total=0;
+  for(const set of boardSets){
+    const newInSet=set.filter(t=>newIds.has(t.id));
+    if(newInSet.length===0) continue;
+    if(set.some(t=>t.isOp&&t.op==='=')){
+      // 算式：所有數字牌（非運算符、非Joker）的面值加總
+      const numSum=set.filter(t=>!t.isOp&&!t.isJoker).reduce((s,t)=>s+t.number,0);
+      if(numSum>0) total+=numSum;
+    } else {
+      // 數字組合：只計算本回合新放的牌
+      const disp=resolveSetDisplay(set);
+      for(const t of newInSet){
+        const r=disp.find(r=>r.tile.id===t.id);
+        if(r&&typeof r.dispNum==='number') total+=r.dispNum;
+      }
+    }
+  }
+  return total;
+}
+
+/* ══════════ JOKER RESOLUTION ══════════ */
+function resolveSetDisplay(tiles){
+  if(tiles.some(t=>t.isOp))
+    return tiles.map(t=>({tile:t,dispNum:t.isOp?t.op:(t.isJoker?'J':t.number),dispColor:t.isOp?'op':(t.isJoker?'joker':t.color),isJoker:!!t.isJoker,isOp:!!t.isOp}));
+  const real=tiles.filter(t=>!t.isJoker),jokers=tiles.filter(t=>t.isJoker);
+  if(real.length===0) return tiles.map(t=>({tile:t,dispNum:'J',dispColor:'joker',isJoker:true,isOp:false}));
+  const nums=real.map(t=>t.number).sort((a,b)=>a-b),cols=real.map(t=>t.color);
+  const isGroup=new Set(nums).size===1,isRun=new Set(cols).size===1&&new Set(nums).size===nums.length;
+  if(isGroup){
+    const n=nums[0],usedC=new Set(cols),res=[];
+    for(const t of real) res.push({tile:t,dispNum:t.number,dispColor:t.color,isJoker:false,isOp:false});
+    for(const j of jokers){const fc=COLORS.find(c=>!usedC.has(c))||'joker';usedC.add(fc);res.push({tile:j,dispNum:n,dispColor:fc,isJoker:true,isOp:false});}
+    return res;
+  }
+  if(isRun){
+    const color=cols[0],mn=Math.min(...nums),mx=Math.max(...nums),usedN=new Set(nums);
+    const gaps=[];for(let n=mn+1;n<mx;n++) if(!usedN.has(n)) gaps.push(n);
+    const jfg=Math.min(jokers.length,gaps.length),jfe=jokers.length-jfg;
+    const posMap={};
+    for(const t of real) posMap[t.number]={tile:t,dispNum:t.number,dispColor:color,isJoker:false,isOp:false};
+    let ji=0;
+    for(let i=0;i<jfg;i++) posMap[gaps[i]]={tile:jokers[ji++],dispNum:gaps[i],dispColor:color,isJoker:true,isOp:false};
+    // Place edge jokers: respect jokerHint if present
+    let s2=mn,e2=mx;
+    for(let i=0;i<jfe;i++){
+      const j=jokers[ji++];
+      const hint=j?j.jokerHint:null; // 'before'|'after'|null
+      if(hint==='after'&&e2<13){
+        e2++;posMap[e2]={tile:j,dispNum:e2,dispColor:color,isJoker:true,isOp:false};
+      } else if(hint==='before'&&s2>1){
+        s2--;posMap[s2]={tile:j,dispNum:s2,dispColor:color,isJoker:true,isOp:false};
+      } else if(s2>1){
+        s2--;posMap[s2]={tile:j,dispNum:s2,dispColor:color,isJoker:true,isOp:false};
+      } else if(e2<13){
+        e2++;posMap[e2]={tile:j,dispNum:e2,dispColor:color,isJoker:true,isOp:false};
+      }
+    }
+    return Object.keys(posMap).map(k=>+k).sort((a,b)=>a-b).map(k=>posMap[k]);
+  }
+  const res=real.map(t=>({tile:t,dispNum:t.number,dispColor:t.color,isJoker:false,isOp:false}));
+  for(const j of jokers) res.push({tile:j,dispNum:'J',dispColor:'joker',isJoker:true,isOp:false});
+  return res;
+}
+function sortSetTiles(tiles){return resolveSetDisplay(tiles).map(r=>r.tile);}
+
+/* ══════════ JOKER MOBILITY CHECK ══════════
+   判斷一個桌面組合中某個 Joker 是否「可以被移走」
+   條件：移走該 Joker 後，剩餘牌仍能形成合法組合
+*/
+function isMobileJoker(set, jokerTile){
+  if(!jokerTile.isJoker) return false;
+  const remaining=set.filter(t=>t.id!==jokerTile.id);
+  if(remaining.length<3) return false;
+  return isValidSet(remaining);
+}
+
+/* ══════════ TASK CHECKING ══════════ */
+/* 取得組合的「代表分數」：數字組合取牌面總和，算式取等號左側結果 */
+function setRepresentativeSum(set){
+  if(set.some(t=>t.isOp&&t.op==='=')){
+    const exprStr=set.map(t=>t.isOp?t.op:String(t.number)).join('');
+    const parts=exprStr.split('=');
+    try{
+      const s=parts[0].replace(/×/g,'*').replace(/÷/g,'/');
+      const v=Function('"use strict";return('+s+')')();
+      return Number.isInteger(v)?v:null;
+    }catch(e){return null;}
+  } else {
+    const d=resolveSetDisplay(set);
+    return d.reduce((s,r)=>s+(typeof r.dispNum==='number'?r.dispNum:0),0);
+  }
+}
+
+/* 計算本回合新出的算式數量 */
+function countNewExprs(newIds){
+  return G.boardSets.filter(set=>set.some(t=>t.isOp)&&isValidExpr(set)&&set.some(t=>newIds.has(t.id))).length;
+}
+
+/* 判定單一任務是否「這次點擊就達成」（even_sum 是回合性的，two_expr 是累計的） */
+function checkTaskForIds(taskId, newIds){
+  if(newIds.size===0) return false;
+  if(taskId==='even_sum'){
+    return G.boardSets.some(set=>{
+      if(!set.some(t=>newIds.has(t.id))) return false;
+      if(!isValidSet(set)) return false;
+      const sum=setRepresentativeSum(set);
+      return sum!==null&&sum>0&&sum%2===0;
+    });
+  }
+  if(taskId==='two_expr'){
+    // 累計模式：取 task 的 progress，加上本回合新算式數量
+    const task=G.players[0].tasks.find(t=>t.id==='two_expr');
+    const alreadyDone=task?task.progress:0;
+    const newExprs=countNewExprs(newIds);
+    return (alreadyDone+newExprs)>=(task?.target||2);
+  }
+  return false;
+}
+function checkTask(taskId){
+  return checkTaskForIds(taskId, new Set(G.newTilesOnBoard));
+}
+
+/* ══════════ RENDER ══════════ */
+function render(){renderScores();renderOpponents();renderBoard();renderControls();renderHand();renderTasks();}
+
+function renderScores(){
+  document.getElementById('scores').innerHTML=G.players.map((p,i)=>
+    `<div class="score-card ${G.currentPlayer===i?'active':''}"><div class="sname">${p.name}</div><div class="scount">${p.hand.length}</div></div>`).join('');
+}
+function renderOpponents(){
+  document.getElementById('opponents').innerHTML=G.players.filter((_,i)=>i!==0).map((p,oi)=>{
+    const pi=oi+1,rev=p.revealHand;
+    let handHtml;
+    if(rev){
+      handHtml='<div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;margin-top:2px">'+
+        p.hand.map(t=>{
+          let cls='tile ';
+          if(t.isOp) cls+=t.op==='='?'eq-tile':'op-tile';
+          else if(t.isJoker) cls+='joker-tile';
+          else cls+=t.color;
+          return `<div class="${cls.trim()}" style="width:22px;height:32px;font-size:10px;cursor:default">${t.isOp?t.op:(t.isJoker?'J':t.number)}</div>`;
+        }).join('')+'</div>';
+      handHtml+=p.tasks.map(task=>`<div style="font-size:9px;color:${task.done?'#3a7a20':'#7888b8'};margin-top:2px">${task.done?'✓ ':''} 任務：${task.name.replace('\n',' ')}</div>`).join('');
+    } else {
+      handHtml='<div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;margin-top:2px">'+p.hand.map(()=>'<div class="tile-back"></div>').join('')+'</div>';
+    }
+    return `<div class="opponent ${G.currentPlayer===pi?'active-turn':''}" onclick="toggleReveal(${pi})" title="點擊查看/隱藏">
+      <div class="opp-name">${p.name}${G.currentPlayer===pi?' ⭐':''} <span style="font-size:8px;color:#667">${rev?'▲':'▼'}</span></div>
+      <div class="opp-tiles">${p.hand.length}張</div>${handHtml}</div>`;
+  }).join('');
+}
+function toggleReveal(pi){G.players[pi].revealHand=!G.players[pi].revealHand;renderOpponents();}
+
+function makeTileEl(r,isNew,isAi,draggable,onDS,onDE){
+  const t=r.tile,d=document.createElement('div');
+  let cls='tile ';
+  if(r.isOp) cls+=t.op==='='?'eq-tile':'op-tile';
+  else if(r.isJoker){
+    cls+='joker-tile';
+    // If resolved to a color, also add the color class for the text color
+    if(r.dispColor&&r.dispColor!=='joker') cls+=' '+r.dispColor;
+  }
+  else cls+=(r.dispColor||t.color||'');
+  if(isNew) cls+=' from-hand-new';
+  if(isAi) cls+=' ai-placed';
+  d.className=cls.trim();
+  d.textContent=r.isOp?t.op:(r.isJoker?(typeof r.dispNum==='number'?r.dispNum:'J'):(r.dispNum??t.number));
+  d.draggable=draggable;
+  if(onDS) d.addEventListener('dragstart',onDS);
+  if(onDE) d.addEventListener('dragend',onDE);
+  return d;
+}
+/* dragState now supports:
+   src:'hand-multi' — dragging G.selectedTiles (multiple hand tiles)
+   src:'board-tail' — dragging from tileIdx to end of set (tail drag)
+   src:'board' — single board tile (existing)
+   src:'hand' — single hand tile (existing)
+*/
+function renderBoard(){
+  const el=document.getElementById('board-sets');el.innerHTML='';
+  const hasTurn=G.newTilesOnBoard.length>0||G.turnBackup!==null;
+  G.boardSets.forEach((set,si)=>{
+    const valid=isValidSet(set),disp=resolveSetDisplay(set);
+    const wrapper=document.createElement('div');wrapper.className='set-wrapper';
+    const groupEl=document.createElement('div');
+    groupEl.className=`set-group ${hasTurn?(valid?'valid-set':'invalid-set'):''}`;
+    disp.forEach((r,ti)=>{
+      const t=r.tile,isNew=G.newTilesOnBoard.includes(t.id);
+      const isAi=G.currentPlayer===0&&G.aiPlacedThisRound.has(t.id)&&!isNew;
+      const d=makeTileEl(r,isNew,isAi,G.currentPlayer===0&&!G.gameOver,
+        e=>{
+          if(G.currentPlayer!==0||G.gameOver) return;
+          saveTurnBackup();
+          // Tail drag only when Shift is explicitly held — normal drag always moves single tile
+          const isTailDrag=e.shiftKey&&disp.length-ti>=2;
+          if(isTailDrag){
+            const tailTiles=disp.slice(ti).map(r=>r.tile);
+            dragState={src:'board-tail',setIdx:si,tileIdx:ti,tiles:tailTiles,tile:t};
+          } else {
+            dragState={src:'board',setIdx:si,tileIdx:ti,tile:t};
+          }
+          e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',String(t.id));
+          setTimeout(()=>d.classList.add('dragging'),0);
+        },
+        ()=>{d.classList.remove('dragging');dragState=null;render();});
+      // Add hover title hint
+      if(disp.length-ti>=2) d.title='按住 Shift 拖曳可移動此牌及之後所有牌';
+      groupEl.appendChild(d);
+    });
+    groupEl.addEventListener('dragover',e=>{e.preventDefault();e.stopPropagation();groupEl.classList.add('drag-over');});
+    groupEl.addEventListener('dragleave',e=>{if(!groupEl.contains(e.relatedTarget))groupEl.classList.remove('drag-over');});
+    groupEl.addEventListener('drop',e=>{e.preventDefault();e.stopPropagation();groupEl.classList.remove('drag-over');dropOnSet(si);});
+    wrapper.appendChild(groupEl);el.appendChild(wrapper);
+  });
+  const nd=document.createElement('div');nd.className='new-set-drop';nd.textContent='+新組';
+  nd.addEventListener('dragover',e=>{e.preventDefault();e.stopPropagation();nd.classList.add('drag-over');});
+  nd.addEventListener('dragleave',()=>nd.classList.remove('drag-over'));
+  nd.addEventListener('drop',e=>{e.preventDefault();e.stopPropagation();nd.classList.remove('drag-over');dropNewSet();});
+  el.appendChild(nd);
+}
+function renderHand(){
+  const p=G.players[0],el=document.getElementById('hand-tiles');
+  el.innerHTML='';
+  if(G.currentPlayer===0&&!G.gameOver){
+    el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('drag-over');});
+    el.addEventListener('dragleave',e=>{if(!el.contains(e.relatedTarget))el.classList.remove('drag-over');});
+    el.addEventListener('drop',e=>{e.preventDefault();el.classList.remove('drag-over');dropOnHand();});
+  }
+  p.hand.forEach(t=>{
+    const sel=G.selectedTiles.find(s=>s.id===t.id);
+    const r={tile:t,dispNum:t.isOp?t.op:(t.isJoker?'J':t.number),dispColor:t.isOp?'op':(t.isJoker?'joker':t.color),isJoker:!!t.isJoker,isOp:!!t.isOp};
+    const div=makeTileEl(r,false,false,G.currentPlayer===0&&!G.gameOver,
+      e=>{
+        saveTurnBackup();
+        // If this tile is selected AND there are multiple selected tiles, drag all of them
+        if(sel&&G.selectedTiles.length>=2){
+          dragState={src:'hand-multi',tiles:[...G.selectedTiles],tile:t};
+        } else {
+          dragState={src:'hand',tile:t};
+        }
+        e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',String(t.id));
+        setTimeout(()=>div.classList.add('dragging'),0);
+      },
+      ()=>{div.classList.remove('dragging');dragState=null;render();});
+    if(sel) div.classList.add('selected');
+    if(sel&&G.selectedTiles.length>=2) div.title=`拖曳將 ${G.selectedTiles.length} 張選取的牌一起移動`;
+    div.addEventListener('click',()=>toggleTile(t.id));
+    el.appendChild(div);
+  });
+  document.getElementById('turn-text').textContent=G.currentPlayer===0?'✦ 你的回合':`等待 ${G.players[G.currentPlayer].name}...`;
+  document.getElementById('played-info').textContent=G.newTilesOnBoard.length>0?`已出${G.newTilesOnBoard.length}張`:'';
+}
+function renderControls(){
+  const my=G.currentPlayer===0&&!G.gameOver,hm=G.newTilesOnBoard.length>0;
+  document.getElementById('controls').innerHTML=`
+    <button class="btn btn-primary btn-large" ${!my||G.selectedTiles.length<3?'disabled':''} onclick="playSelectedSet()">出這組</button>
+    <button class="btn btn-end btn-large" ${!my||!hm?'disabled':''} onclick="confirmTurn()">確認出牌</button>
+    <button class="btn btn-danger btn-large" ${!my||(!hm&&!G.turnBackup)?'disabled':''} onclick="undoTurn()">撤銷</button>
+    <button class="btn btn-secondary btn-large" ${!my||hm?'disabled':''} onclick="drawAndSkip()">摸牌跳過</button>
+    <button class="btn btn-info btn-large" onclick="showRules()">規則</button>`;
+}
+
+/* ══════════ TASK JUDGE ══════════ */
+function judgeTask(ti){
+  const task=G.players[0].tasks[ti];
+  if(task.done){setMsg('此任務已完成！','info');return;}
+  if(G.currentPlayer!==0){setMsg('只能在你的回合判定任務。','warn');return;}
+  if(G.newTilesOnBoard.length===0){setMsg('❌ 你本回合還沒有放任何牌上桌，無法判定任務。','error');return;}
+  const newIds=new Set(G.newTilesOnBoard);
+  if(task.id==='two_expr'){
+    // 累計模式：記錄本回合新增的算式數量
+    const newExprs=countNewExprs(newIds);
+    if(newExprs===0){setMsg('❌ 本回合沒有出新的算式。','error');return;}
+    task.progress=(task.progress||0)+newExprs;
+    if(task.progress>=(task.target||2)){
+      task.done=true;render();
+      setMsg(`✓ 任務完成：累計做出 ${task.progress} 個算式！`,'success');
+    } else {
+      render();
+      setMsg(`✓ 記錄成功！已累計 ${task.progress}/${task.target||2} 個算式，繼續加油！`,'success');
+    }
+    checkWinCondition();
+    return;
+  }
+  if(checkTask(task.id)){
+    task.done=true;render();
+    setMsg(`✓ 任務完成：${task.name.replace('\n',' ')}！`,'success');
+    checkWinCondition();
+  } else {
+    setMsg(`❌ 任務未達成：${task.desc}。`,'error');
+  }
+}
+function checkWinCondition(){
+  const p=G.players[0];
+  if(p.hand.length===0&&p.tasks.every(t=>t.done)) endGame(0);
+}
+
+function renderTasks(){
+  const el=document.getElementById('task-list'),p=G.players[0];
+  el.innerHTML='';
+  p.tasks.forEach((task,ti)=>{
+    const div=document.createElement('div');
+    div.className=`task-card${task.done?' done':''}`;
+    // Replace \n with ，for single-line display
+    const nameOneLine=task.name.replace(/\n/g,'，');
+    let progressHtml='';
+    if(task.id==='two_expr'&&!task.done){
+      const prog=task.progress||0,tgt=task.target||2;
+      progressHtml=`<div class="task-progress">進度：${prog}/${tgt}</div>`;
+    }
+    div.innerHTML=`<div class="task-name">${nameOneLine}</div><div class="task-desc">${task.desc}</div>${task.done?'<div class="task-clear">✓ CLEAR</div>':progressHtml+'<div class="task-pending">點擊判定</div>'}`;
+    if(!task.done&&!G.gameOver) div.addEventListener('click',()=>judgeTask(ti));
+    el.appendChild(div);
+  });
+}
+
+/* ══════════ JOKER POSITION CHOICE ══════════
+   The user's position choice is stored as t.jokerHint = 'before' | 'after'
+   resolveSetDisplay reads this to place the Joker correctly.
+   askJokerPosition shows the modal only when truly ambiguous. */
+function isJokerAmbiguous(jokerTile, targetSet){
+  const real=targetSet.filter(t=>!t.isJoker&&!t.isOp);
+  if(!real.length) return false;
+  const cols=real.map(t=>t.color);
+  const nums=real.map(t=>t.number).sort((a,b)=>a-b);
+  const isRun=new Set(cols).size===1&&new Set(nums).size===nums.length;
+  if(!isRun) return false;
+  // Check internal gaps first — Joker fills gap, no ambiguity
+  const usedN=new Set(nums);
+  for(let n=Math.min(...nums)+1;n<Math.max(...nums);n++) if(!usedN.has(n)) return false;
+  const mn=Math.min(...nums),mx=Math.max(...nums);
+  const canBefore=mn>1, canAfter=mx<13;
+  return canBefore&&canAfter;
+}
+
+function askJokerPosition(jokerTile, targetSet, onChoose){
+  if(!isJokerAmbiguous(jokerTile, targetSet)){onChoose(null);return;}
+  const real=targetSet.filter(t=>!t.isJoker&&!t.isOp);
+  const nums=real.map(t=>t.number).sort((a,b)=>a-b);
+  const mn=Math.min(...nums),mx=Math.max(...nums);
+  showModal(`
+    <h3>Joker 要代替哪個位置？</h3>
+    <p>目前順子：${nums.join(' ')}<br>Joker 可以放在前面（${mn-1}）或後面（${mx+1}）</p>
+    <div style="display:flex;gap:12px;justify-content:center;margin-top:8px">
+      <button class="btn btn-primary" onclick="resolveJokerChoice('before')">放前面（${mn-1}）</button>
+      <button class="btn btn-end" onclick="resolveJokerChoice('after')">放後面（${mx+1}）</button>
+    </div>`);
+  window._jokerChoiceCallback=onChoose;
+}
+window.resolveJokerChoice=function(pos){
+  hideModal();
+  if(window._jokerChoiceCallback){window._jokerChoiceCallback(pos);window._jokerChoiceCallback=null;}
+};
+function saveTurnBackup(){
+  if(!G.turnBackup) G.turnBackup={hand:clone(G.players[0].hand),boardSets:clone(G.boardSets),hasPlayed:G.players[0].hasPlayed};
+}
+function removeTileFromBoard(setIdx,tileDisplayIdx){
+  const set=G.boardSets[setIdx],disp=resolveSetDisplay(set);
+  const lt=disp.slice(0,tileDisplayIdx).map(r=>r.tile),rt=disp.slice(tileDisplayIdx+1).map(r=>r.tile);
+  G.boardSets.splice(setIdx,1);
+  const ns=[];if(lt.length>0)ns.push(lt);if(rt.length>0)ns.push(rt);
+  G.boardSets.splice(setIdx,0,...ns);
+  return {leftLen:lt.length,rightLen:rt.length};
+}
+function dropOnSet(ti){
+  if(!dragState||G.currentPlayer!==0) return;
+  saveTurnBackup();
+
+  // ── hand-multi: drag multiple selected hand tiles ──
+  if(dragState.src==='hand-multi'){
+    const tiles=dragState.tiles;
+    tiles.forEach(t=>{
+      const idx=G.players[0].hand.findIndex(h=>h.id===t.id);
+      if(idx>=0){G.players[0].hand.splice(idx,1);G.newTilesOnBoard.push(t.id);}
+      G.boardSets[ti].push(t);
+    });
+    G.selectedTiles=[];render();checkBoardMsg();
+    return;
+  }
+
+  // ── board-tail: drag tile + all tiles after it ──
+  if(dragState.src==='board-tail'){
+    const fi=dragState.setIdx;if(fi===ti) return;
+    const tailTiles=dragState.tiles; // tiles from tileIdx to end
+    const set=G.boardSets[fi];
+    const disp=resolveSetDisplay(set);
+    // Remove tail tiles from source set
+    const tailIds=new Set(tailTiles.map(t=>t.id));
+    const remaining=set.filter(t=>!tailIds.has(t.id));
+    G.boardSets.splice(fi,1);
+    if(remaining.length>0) G.boardSets.splice(fi,0,remaining);
+    // Adjust target index after removal
+    const nt=fi<ti?(remaining.length>0?ti-1+1:ti-1):ti;
+    const ntClamped=Math.max(0,Math.min(nt,G.boardSets.length-1));
+    // Check if target still exists after removal
+    if(G.boardSets.length===0||ntClamped>=G.boardSets.length){
+      G.boardSets.push([...tailTiles]);
+    } else {
+      tailTiles.forEach(t=>G.boardSets[ntClamped].push(t));
+    }
+    G.selectedTiles=[];render();checkBoardMsg();
+    return;
+  }
+
+  // ── single hand tile ──
+  const t=dragState.tile;
+  if(dragState.src==='hand'){
+    const idx=G.players[0].hand.findIndex(h=>h.id===t.id);
+    if(idx>=0){G.players[0].hand.splice(idx,1);G.newTilesOnBoard.push(t.id);}
+    if(t.isJoker&&G.boardSets[ti]){
+      const targetSet=[...G.boardSets[ti]];
+      G.boardSets[ti].push(t);
+      askJokerPosition(t,targetSet,(pos)=>{
+        if(pos) t.jokerHint=pos;
+        G.boardSets[ti]=sortSetTiles(G.boardSets[ti]);
+        G.selectedTiles=[];render();checkBoardMsg();
+      });
+      return;
+    }
+    G.boardSets[ti].push(t);
+  } else if(dragState.src==='board'){
+    const fi=dragState.setIdx;if(fi===ti) return;
+    const {leftLen,rightLen}=removeTileFromBoard(fi,dragState.tileIdx);
+    const delta=(leftLen>0?1:0)+(rightLen>0?1:0)-1;
+    let nt=ti;if(fi<ti) nt=ti+delta;
+    nt=Math.max(0,Math.min(nt,G.boardSets.length-1));
+    if(t.isJoker&&G.boardSets[nt]){
+      const targetSet=[...G.boardSets[nt]];
+      if(G.boardSets[nt]) G.boardSets[nt].push(t);else G.boardSets.push([t]);
+      askJokerPosition(t,targetSet,(pos)=>{
+        if(pos) t.jokerHint=pos;
+        if(G.boardSets[nt]) G.boardSets[nt]=sortSetTiles(G.boardSets[nt]);
+        G.selectedTiles=[];render();checkBoardMsg();
+      });
+      return;
+    }
+    if(G.boardSets[nt]) G.boardSets[nt].push(t);else G.boardSets.push([t]);
+  }
+  G.selectedTiles=[];render();checkBoardMsg();
+}
+function dropNewSet(){
+  if(!dragState||G.currentPlayer!==0) return;
+  saveTurnBackup();
+
+  if(dragState.src==='hand-multi'){
+    const tiles=dragState.tiles;
+    tiles.forEach(t=>{
+      const idx=G.players[0].hand.findIndex(h=>h.id===t.id);
+      if(idx>=0){G.players[0].hand.splice(idx,1);G.newTilesOnBoard.push(t.id);}
+    });
+    G.boardSets.push([...tiles]);
+    G.selectedTiles=[];render();checkBoardMsg();
+    return;
+  }
+
+  if(dragState.src==='board-tail'){
+    const fi=dragState.setIdx;
+    const tailTiles=dragState.tiles;
+    const tailIds=new Set(tailTiles.map(t=>t.id));
+    const remaining=G.boardSets[fi].filter(t=>!tailIds.has(t.id));
+    G.boardSets.splice(fi,1);
+    if(remaining.length>0) G.boardSets.splice(fi,0,remaining);
+    G.boardSets.push([...tailTiles]);
+    G.selectedTiles=[];render();checkBoardMsg();
+    return;
+  }
+
+  const t=dragState.tile;
+  if(dragState.src==='hand'){
+    const idx=G.players[0].hand.findIndex(h=>h.id===t.id);
+    if(idx>=0){G.players[0].hand.splice(idx,1);G.newTilesOnBoard.push(t.id);}
+    G.boardSets.push([t]);
+  } else {removeTileFromBoard(dragState.setIdx,dragState.tileIdx);G.boardSets.push([t]);}
+  G.selectedTiles=[];render();checkBoardMsg();
+}
+function dropOnHand(){
+  if(!dragState||G.currentPlayer!==0) return;
+  if(dragState.src==='board'){
+    const t=dragState.tile;
+    if(!G.newTilesOnBoard.includes(t.id)){setMsg('❌ 原本在桌面的牌不能拖回手牌。','error');return;}
+    saveTurnBackup();
+    G.newTilesOnBoard.splice(G.newTilesOnBoard.indexOf(t.id),1);
+    removeTileFromBoard(dragState.setIdx,dragState.tileIdx);
+    G.players[0].hand.push(t);G.selectedTiles=[];render();checkBoardMsg();
+  }
+}
+function checkBoardMsg(){
+  if(!G.newTilesOnBoard.length&&!G.turnBackup) return;
+  const ok=G.boardSets.every(s=>isValidSet(s));
+  setMsg(ok?'✓ 桌面合法，按「確認出牌」。':'⚠ 桌面有不完整組合，繼續調整。',ok?'success':'warn');
+}
+
+/* ══════════ PLAYER ACTIONS ══════════ */
+function toggleTile(id){
+  if(G.currentPlayer!==0||G.gameOver) return;
+  const t=G.players[0].hand.find(h=>h.id===id);if(!t) return;
+  const idx=G.selectedTiles.findIndex(s=>s.id===id);
+  if(idx>=0) G.selectedTiles.splice(idx,1);else G.selectedTiles.push(t);
+  renderHand();renderControls();
+  const n=G.selectedTiles.length;
+  if(n>=3){
+    const hasEq=G.selectedTiles.some(t=>t.isOp&&t.op==='=');
+    const v=hasEq?isValidExpr(G.selectedTiles):isValidSet(G.selectedTiles);
+    setMsg(v?`✓ 有效，按「出這組」。`:`已選${n}張，非有效組合。`,v?'success':'');
+  } else if(n>0) setMsg(`已選${n}張。`);
+  else setMsg('選牌或拖曳到桌面。');
+}
+function playSelectedSet(){
+  if(G.currentPlayer!==0||G.selectedTiles.length<3) return;
+  let tiles=[...G.selectedTiles];
+  const hasEq=tiles.some(t=>t.isOp&&t.op==='=');
+  const valid=hasEq?isValidExpr(tiles):isValidSet(tiles);
+  if(!valid){setMsg('❌ 無效！算式需含=號且兩側相等；數字牌需為順子或同數組。','error');return;}
+  if(hasEq) tiles=sortExprTiles(tiles);
+
+  // Check if there's an ambiguous Joker in a run (not a group, not an expression)
+  if(!hasEq){
+    const jokers=tiles.filter(t=>t.isJoker);
+    const realTiles=tiles.filter(t=>!t.isJoker&&!t.isOp);
+    const cols=realTiles.map(t=>t.color);
+    const isRun=new Set(cols).size===1&&realTiles.length>=2;
+    if(jokers.length>0&&isRun){
+      const nums=realTiles.map(t=>t.number).sort((a,b)=>a-b);
+      const mn=Math.min(...nums),mx=Math.max(...nums);
+      const usedN=new Set(nums);
+      // Count how many jokers fill internal gaps vs edges
+      let internalGaps=0;
+      for(let n=mn+1;n<mx;n++) if(!usedN.has(n)) internalGaps++;
+      const edgeJokers=jokers.length-internalGaps;
+      if(edgeJokers>0&&mn>1&&mx<13){
+        // Ambiguous: ask user
+        const jokerToAsk=jokers[internalGaps]; // first edge joker
+        askJokerPosition(jokerToAsk, tiles, (pos)=>{
+          if(pos) jokerToAsk.jokerHint=pos;
+          const sorted=sortSetTiles(tiles);
+          saveTurnBackup();
+          sorted.forEach(t=>{const i=G.players[0].hand.findIndex(h=>h.id===t.id);if(i>=0){G.players[0].hand.splice(i,1);G.newTilesOnBoard.push(t.id);}});
+          G.boardSets.push(sorted);G.selectedTiles=[];
+          if(G.players[0].hand.length===0){render();setTimeout(autoJudgeTasksAndCheck,100);return;}
+          render();setMsg('✓ 放置成功！','success');
+        });
+        return;
+      }
+    }
+  }
+
+  saveTurnBackup();
+  const sorted=hasEq?tiles:sortSetTiles(tiles);
+  sorted.forEach(t=>{const i=G.players[0].hand.findIndex(h=>h.id===t.id);if(i>=0){G.players[0].hand.splice(i,1);G.newTilesOnBoard.push(t.id);}});
+  G.boardSets.push(sorted);G.selectedTiles=[];
+  if(G.players[0].hand.length===0){render();setTimeout(autoJudgeTasksAndCheck,100);return;}
+  render();setMsg('✓ 放置成功！','success');
+}
+
+function autoJudgeTasks(){
+  // Auto-judge all incomplete tasks at confirm time
+  if(G.newTilesOnBoard.length===0) return;
+  const newIds=new Set(G.newTilesOnBoard);
+  const p=G.players[0];
+  p.tasks.forEach(task=>{
+    if(task.done) return;
+    if(task.id==='two_expr'){
+      const newExprs=countNewExprs(newIds);
+      if(newExprs>0){
+        task.progress=(task.progress||0)+newExprs;
+        if(task.progress>=(task.target||2)) task.done=true;
+      }
+    } else {
+      if(checkTaskForIds(task.id,newIds)) task.done=true;
+    }
+  });
+}
+
+function autoJudgeTasksAndCheck(){
+  autoJudgeTasks();
+  checkWinCondition();
+}
+
+function confirmTurn(){
+  if(G.currentPlayer!==0) return;
+  if(!G.newTilesOnBoard.length){setMsg('❌ 你沒有將手牌加入桌面！','error');return;}
+  G.boardSets=G.boardSets.map(s=>s.some(t=>t.isOp)?sortExprTiles(s):sortSetTiles(s));
+  if(!G.boardSets.every(s=>isValidSet(s))){setMsg('❌ 桌面有不合法組合，已撤銷。','error');undoTurn(true);return;}
+  if(!G.players[0].hasPlayed){
+    const newIds=new Set(G.newTilesOnBoard);
+    const score=calcNewTilesScore(newIds, G.boardSets);
+    if(score<30){setMsg(`❌ 首次出牌需至少30分（含運算式），本回合只有${score}分，已撤銷。`,'error');undoTurn(true);return;}
+  }
+  // Auto-judge tasks before clearing newTilesOnBoard
+  autoJudgeTasks();
+  G.newTilesOnBoard.forEach(id=>G.playerPlacedIds.add(id));
+  G.players[0].hasPlayed=true;
+  G.newTilesOnBoard=[];G.turnBackup=null;G.selectedTiles=[];G.aiPlacedThisRound=new Set();
+  render();
+  if(G.players[0].hand.length===0){
+    if(G.players[0].tasks.every(t=>t.done)){endGame(0);return;}
+    setMsg('手牌已出完！但任務尚未完成，繼續等待…','warn');
+  } else {
+    const doneTasks=G.players[0].tasks.filter(t=>t.done).length;
+    const totalTasks=G.players[0].tasks.length;
+    setMsg(`✓ 回合確認！任務進度：${doneTasks}/${totalTasks}。`,'info');
+  }
+  nextTurn();
+}
+function undoTurn(silent=false){
+  if(G.turnBackup){G.players[0].hand=clone(G.turnBackup.hand);G.boardSets=clone(G.turnBackup.boardSets);G.players[0].hasPlayed=G.turnBackup.hasPlayed;}
+  G.newTilesOnBoard=[];G.turnBackup=null;G.selectedTiles=[];
+  if(!silent) setMsg('已撤銷本回合所有改動。','info');render();
+}
+function drawAndSkip(){
+  if(G.currentPlayer!==0||G.gameOver) return;
+  if(G.newTilesOnBoard.length>0){setMsg('❌ 已有出牌，請按「確認出牌」或「撤銷」。','error');return;}
+  if(G.pool.length>0){G.players[0].hand.push(G.pool.pop());setMsg(`摸了一張牌，現有${G.players[0].hand.length}張。`,'info');}
+  else setMsg('牌池已空！請再檢查手上是否有牌可以出。換下一位玩家。','warn');
+  G.turnBackup=null;G.selectedTiles=[];G.aiPlacedThisRound=new Set();nextTurn();
+}
+function nextTurn(){
+  G.currentPlayer=(G.currentPlayer+1)%G.players.length;
+  G.newTilesOnBoard=[];G.turnBackup=null;
+  // Do NOT clear aiPlacedThisRound here — it should persist until player confirms
+  // It is only cleared when: player confirms turn, player draws/skips, or a new AI turn begins
+  if(G.currentPlayer===0){
+    render();
+    setMsg('✦ 輪到你了！記得點任務卡確認完成！','info');
+  } else {
+    // Before each AI turn, reset that AI's contribution (so only last AI's moves show orange)
+    // Actually we want to show ALL AI moves since player's last turn — so accumulate
+    render();
+    setTimeout(aiTurn,900);
+  }
+}
+
+/* ══════════ AI ══════════ */
+function aiTurn(){
+  if(G.gameOver) return;
+  const p=G.players[G.currentPlayer];
+  const result=aiPlayBest(p);
+  if(result){
+    G.boardSets=result.boardSets;
+    p.hand=result.hand;
+    p.hasPlayed=true;
+    result.newIds.forEach(id=>G.aiPlacedThisRound.add(id));
+    p.tasks.forEach(task=>{
+      if(!task.done&&checkTaskForIds(task.id,G.aiPlacedThisRound)) task.done=true;
+    });
+    setMsg(`${p.name} 出了 ${result.placed} 張牌。`,'info');
+    if(p.hand.length===0&&p.tasks.every(t=>t.done)){render();setTimeout(()=>endGame(G.currentPlayer),400);return;}
+  } else {
+    if(G.pool.length>0){p.hand.push(G.pool.pop());setMsg(`${p.name} 摸了一張牌。`,'info');}
+    else setMsg(`${p.name} 無牌可摸，跳過。`,'info');
+  }
+  render();
+  setTimeout(nextTurn,600);
+}
+
+function aiPlayBest(player){
+  // ⑤ 15% chance to skip (only after first meld unlocked)
+  if(player.hasPlayed && Math.random()<0.15) return null;
+
+  const hand=clone(player.hand);
+  let board=clone(G.boardSets);
+  let placed=0,changed=false;
+  const isFirst=!player.hasPlayed;
+  let meldCount=0;      // ① max 3 melds total per turn
+  let exprMeldsPlaced=0; // max 2 expr melds
+  const hb=new Set(player.hand.map(t=>t.id));
+  const thisTurnIds=new Set(); // IDs placed THIS turn — protect from tryExtendBoardExpr
+
+  for(let iter=0;iter<60;iter++){
+    if(meldCount>=3) break; // ① hard cap
+    let did=false;
+
+    // 1. 純數字組合
+    const meld=findPureMeld(hand,board,isFirst,placed===0);
+    if(meld){
+      board.push(sortSetTiles(meld.tiles));
+      meld.tiles.forEach(t=>{const i=hand.findIndex(h=>h.id===t.id);if(i>=0)hand.splice(i,1);thisTurnIds.add(t.id);});
+      placed+=meld.tiles.length;meldCount++;changed=true;did=true;continue;
+    }
+
+    // 2. 延伸現有數字組合（補牌，不計入 meldCount）
+    if(!isFirst||placed>0){
+      const ext=findExtension(hand,board);
+      if(ext){
+        board[ext.setIdx].push(ext.tile);
+        board[ext.setIdx]=sortSetTiles(board[ext.setIdx]);
+        const i=hand.findIndex(h=>h.id===ext.tile.id);if(i>=0)hand.splice(i,1);
+        placed++;changed=true;did=true;continue;
+      }
+    }
+
+    // 3. 純手牌出算式（最多2組，計入 meldCount）
+    if(exprMeldsPlaced<2){
+      const expr=findExprMeld(hand,board,isFirst,placed===0,5);
+      if(expr){
+        board.push(expr.tiles);
+        expr.tiles.forEach(t=>{hand.splice(hand.findIndex(h=>h.id===t.id),1);thisTurnIds.add(t.id);});
+        placed+=expr.tiles.length;meldCount++;exprMeldsPlaced++;changed=true;did=true;continue;
+      }
+    }
+
+    // 4. 借桌面 Joker（② 移除 borrowForExpr 和 dismantleExpr）
+    if(!isFirst||placed>0){
+      const mj=tryUseJokerFromBoard(hand,board);
+      if(mj){
+        board.splice(mj.jokerSetIdx,1);
+        board.splice(mj.jokerSetIdx,0,...mj.remainSets);
+        mj.jokerTiles.forEach(j=>hand.push(j));
+        board.push(mj.newMeld);
+        mj.newMeld.forEach(t=>{const i=hand.findIndex(h=>h.id===t.id);if(i>=0)hand.splice(i,1);});
+        placed+=mj.newMeld.length;meldCount++;changed=true;did=true;continue;
+      }
+      // 延伸桌面算式（對稱補牌，保留）
+      const extExpr=tryExtendBoardExpr(hand,board,thisTurnIds);
+      if(extExpr){
+        const {setIdx:esi,newSet,usedTiles}=extExpr;
+        board.splice(esi,1,newSet);
+        usedTiles.forEach(t=>{const i=hand.findIndex(h=>h.id===t.id);if(i>=0)hand.splice(i,1);});
+        placed+=usedTiles.length;changed=true;did=true;continue;
+      }
+    }
+
+    if(!did) break;
+  }
+
+  if(!changed) return null;
+  if(isFirst){
+    const ni=new Set(hand.map(t=>t.id));
+    const newIds=new Set();hb.forEach(id=>{if(!ni.has(id))newIds.add(id);});
+    if(calcNewTilesScore(newIds,board)<30) return null;
+  }
+  const ni=new Set(hand.map(t=>t.id));
+  const newIds=new Set();hb.forEach(id=>{if(!ni.has(id))newIds.add(id);});
+  return {boardSets:board,hand,placed,newIds};
+}
+function findBorrowableTiles(board){
+  const results=[];
+  for(let si=0;si<board.length;si++){
+    const set=board[si];
+    if(set.some(t=>t.isOp)) continue; // 算式不借
+    const disp=resolveSetDisplay(set);
+    for(let ti=0;ti<disp.length;ti++){
+      const r=disp[ti];
+      const t=r.tile;
+      // 計算移走此牌後的左右段
+      const leftTiles=disp.slice(0,ti).map(x=>x.tile);
+      const rightTiles=disp.slice(ti+1).map(x=>x.tile);
+      const splitSets=[];
+      // 左段：若 ≥3 且合法，保留；否則若 <3 需要合并回手（只允許若合并後整段重組仍合法）
+      const leftOk=leftTiles.length>=3&&isValidSet(leftTiles);
+      const rightOk=rightTiles.length>=3&&isValidSet(rightTiles);
+      const leftShort=leftTiles.length>0&&leftTiles.length<3;
+      const rightShort=rightTiles.length>0&&rightTiles.length<3;
+      if(leftShort||rightShort) continue; // 有殘段不足3張，不借
+      if(!leftOk&&leftTiles.length>0) continue;
+      if(!rightOk&&rightTiles.length>0) continue;
+      if(leftTiles.length===0&&rightTiles.length===0) continue;
+      if(leftTiles.length>0) splitSets.push(leftTiles);
+      if(rightTiles.length>0) splitSets.push(rightTiles);
+      if(splitSets.length===0) continue;
+      results.push({tile:t, setIdx:si, tileDispIdx:ti, splitSets, dispNum:r.dispNum});
+    }
+  }
+  return results;
+}
+
+/* ══ 核心：AI 嘗試從桌面借一張牌，搭配手牌的運算符湊出算式 ══
+   算式不看花色，只看數字值
+   策略：借走桌面上某張值為 V 的牌，用手中的運算符和數字牌湊出含 V 的合法算式 */
+function tryBorrowForExpr(hand,board){
+  const eqTiles=hand.filter(t=>t.isOp&&t.op==='=');
+  if(eqTiles.length===0) return null;
+  const opTiles=hand.filter(t=>t.isOp&&t.op!=='=');
+  if(opTiles.length===0) return null;
+  const handNums=hand.filter(t=>!t.isOp&&!t.isJoker);
+
+  const borrowable=findBorrowableTiles(board);
+  for(const {tile:borrowed, setIdx, splitSets, dispNum} of borrowable){
+    // Skip sets containing any player-placed tile
+    if(board[setIdx] && board[setIdx].some(t=>G.playerPlacedIds.has(t.id))) continue;
+    // dispNum 是這張牌在算式中代表的數值（Joker 已解析）
+    const bVal=typeof dispNum==='number'?dispNum:borrowed.number;
+    if(!bVal||bVal<=0) continue;
+
+    // 把借來的牌當成一個數字值 bVal，嘗試用手牌組出含 bVal 的算式
+    // 算式數字牌都從 hand（不含 op），借來的牌有實際 tile 物件
+    const expr=findExprUsingValue(bVal, borrowed, handNums, opTiles, eqTiles);
+    if(expr){
+      return {borrowed, setIdx, splitSets, exprTiles:expr};
+    }
+  }
+  return null;
+}
+
+/* 找出一個含 targetVal 的合法算式
+   借來的牌代表值 targetVal，算式不限結果大小 */
+function findExprUsingValue(targetVal, borrowedTile, handNums, opTiles, eqTiles){
+  const eq=eqTiles[0];
+
+  // 形式：target op B = C
+  for(const op of opTiles){
+    for(let bi=0;bi<handNums.length;bi++){
+      const b=handNums[bi];
+      const result=calcOp(targetVal,b.number,op.op);
+      if(result===null) continue;
+      const cTile=handNums.find((t,i)=>i!==bi&&t.number===result);
+      if(cTile){const tiles=[borrowedTile,op,b,eq,cTile];if(isValidExpr(tiles)) return tiles;}
+      // C 也可以是 target（若 result===targetVal，但 borrowedTile 只有一張）
+    }
+    // 形式：A op target = C
+    for(let ai=0;ai<handNums.length;ai++){
+      const a=handNums[ai];
+      const result=calcOp(a.number,targetVal,op.op);
+      if(result===null) continue;
+      const cTile=handNums.find((t,i)=>i!==ai&&t.number===result);
+      if(cTile){const tiles=[a,op,borrowedTile,eq,cTile];if(isValidExpr(tiles)) return tiles;}
+    }
+    // 形式：A op B = target
+    for(let ai=0;ai<handNums.length;ai++){
+      for(let bi=0;bi<handNums.length;bi++){
+        if(ai===bi) continue;
+        const a=handNums[ai],b=handNums[bi];
+        const result=calcOp(a.number,b.number,op.op);
+        if(result===null||result!==targetVal) continue;
+        const tiles=[a,op,b,eq,borrowedTile];
+        if(isValidExpr(tiles)) return tiles;
+      }
+    }
+  }
+  // 形式：target op B op2 C = D 或 A op target op2 C = D
+  const addSub=opTiles.filter(t=>t.op==='+'||t.op==='-');
+  if(addSub.length>=2&&eqTiles.length>=1){
+    for(let bi=0;bi<handNums.length;bi++){
+      for(let ci=0;ci<handNums.length;ci++){
+        if(bi===ci) continue;
+        const b=handNums[bi],c=handNums[ci];
+        for(let o1=0;o1<addSub.length;o1++){
+          for(let o2=0;o2<addSub.length;o2++){
+            if(o1===o2) continue;
+            const op1=addSub[o1],op2=addSub[o2];
+            const r1=calcOp(targetVal,b.number,op1.op);if(r1===null) continue;
+            const result=calcOp(r1,c.number,op2.op);if(result===null) continue;
+            const dTile=handNums.find((t,i)=>i!==bi&&i!==ci&&t.number===result);
+            if(dTile){const tiles=[borrowedTile,op1,b,op2,c,eq,dTile];if(isValidExpr(tiles)) return tiles;}
+          }
+        }
+      }
+    }
+  }
+  // 形式：A op B = target op C （等號右側含 target）
+  if(opTiles.length>=2){
+    for(const op1 of opTiles){
+      for(let ai=0;ai<handNums.length;ai++){
+        for(let bi=0;bi<handNums.length;bi++){
+          if(ai===bi) continue;
+          const a=handNums[ai],b=handNums[bi];
+          const lhs=calcOp(a.number,b.number,op1.op);if(lhs===null) continue;
+          for(const op2 of opTiles){
+            if(op2.id===op1.id) continue;
+            for(let ci=0;ci<handNums.length;ci++){
+              if(ci===ai||ci===bi) continue;
+              const c=handNums[ci];
+              const rhs=calcOp(targetVal,c.number,op2.op);
+              if(rhs===null||rhs!==lhs) continue;
+              const tiles=[a,op1,b,eq,borrowedTile,op2,c];
+              if(isValidExpr(tiles)) return tiles;
+            }
+          }
+        }
+      }
+    }
+  }
+  return null;
+}
+
+/* 嘗試借用桌面可移動 Joker（支援一次借多個）湊 Rummikub 組合 */
+function tryUseJokerFromBoard(hand,board){
+  // Collect all sets that have at least one mobile Joker
+  for(let si=0;si<board.length;si++){
+    const set=board[si];
+    if(set.some(t=>t.isOp)) continue;
+    // Skip sets containing any player-placed tile
+    if(set.some(t=>G.playerPlacedIds.has(t.id))) continue;
+
+    // Find ALL mobile Jokers in this set
+    const mobileJokers=set.filter(t=>t.isJoker&&isMobileJoker(set,t));
+    if(mobileJokers.length===0) continue;
+
+    // Try borrowing each subset of mobile Jokers (1, 2, ... all)
+    // Start with borrowing all of them, then fewer
+    for(let mask=((1<<mobileJokers.length)-1);mask>0;mask--){
+      const toBorrow=mobileJokers.filter((_,i)=>mask&(1<<i));
+      // Check: after removing all toBorrow, the set is still valid or splits into valid parts
+      const remaining=set.filter(t=>!toBorrow.some(j=>j.id===t.id));
+      let splitSets=[];
+      if(remaining.length===0){
+        // All tiles were Jokers — don't borrow if nothing remains
+        continue;
+      } else if(remaining.length>=3&&isValidSet(remaining)){
+        splitSets=[remaining];
+      } else if(remaining.length>0){
+        // Try to split into valid parts using display order
+        const disp=resolveSetDisplay(set);
+        // Build a sequence of remaining tiles in display order
+        const dispRemaining=disp.filter(r=>!toBorrow.some(j=>j.id===r.tile.id));
+        // Split at any position into valid left+right
+        let found=false;
+        for(let sp=1;sp<dispRemaining.length;sp++){
+          const left=dispRemaining.slice(0,sp).map(r=>r.tile);
+          const right=dispRemaining.slice(sp).map(r=>r.tile);
+          const leftOk=left.length>=3&&isValidSet(left);
+          const rightOk=right.length>=3&&isValidSet(right);
+          if(leftOk&&rightOk){splitSets=[left,right];found=true;break;}
+          if(leftOk&&right.length===0){splitSets=[left];found=true;break;}
+          if(rightOk&&left.length===0){splitSets=[right];found=true;break;}
+        }
+        if(!found) continue;
+      }
+
+      // Try using these Jokers + hand tiles to form a new valid meld
+      const fakeHand=[...hand,...toBorrow];
+      const meld=findPureMeldWithJoker(fakeHand);
+      if(meld&&toBorrow.some(j=>meld.tiles.some(t=>t.id===j.id))){
+        return {jokerTiles:toBorrow, jokerSetIdx:si, remainSets:splitSets, newMeld:meld.tiles};
+      }
+    }
+  }
+  return null;
+}
+
+function findPureMeldWithJoker(hand){
+  const jokers=hand.filter(t=>t.isJoker);
+  for(let c of COLORS){
+    const cc=hand.filter(t=>t.color===c&&!t.isOp).sort((a,b)=>a.number-b.number);
+    for(let i=0;i<cc.length-2;i++){
+      for(let len=Math.min(cc.length-i,10);len>=3;len--){
+        const sl=cc.slice(i,i+len),ns=sl.map(t=>t.number);
+        let ok=true;for(let j=1;j<ns.length;j++) if(ns[j]-ns[j-1]!==1){ok=false;break;}
+        if(ok) return {tiles:sl};
+      }
+    }
+  }
+  if(jokers.length>0){
+    for(let c of COLORS){
+      const cc=hand.filter(t=>t.color===c&&!t.isOp&&!t.isJoker).sort((a,b)=>a.number-b.number);
+      if(cc.length<2) continue;
+      for(let i=0;i<cc.length-1;i++){
+        for(let j=i+1;j<cc.length;j++){
+          const gap=cc[j].number-cc[i].number-1;
+          if(gap>0&&gap<=jokers.length){
+            const tiles=[cc[i],...jokers.slice(0,gap),cc[j]];
+            if(isValidRummikub(tiles)) return {tiles};
+          }
+        }
+      }
+      for(let i=0;i<cc.length-1;i++){
+        const a=cc[i],b=cc[i+1];
+        if(b.number-a.number===1&&a.number>1&&jokers[0]){const tiles=[jokers[0],a,b];if(isValidRummikub(tiles)) return {tiles};}
+        if(b.number-a.number===1&&b.number<13&&jokers[0]){const tiles=[a,b,jokers[0]];if(isValidRummikub(tiles)) return {tiles};}
+      }
+    }
+    for(let n=1;n<=13;n++){
+      const gr=hand.filter(t=>t.number===n&&!t.isOp&&!t.isJoker);
+      const u=[],seen=new Set();for(let t of gr) if(!seen.has(t.color)){seen.add(t.color);u.push(t);}
+      if(u.length>=2&&jokers[0]){const tiles=[...u.slice(0,2),jokers[0]];if(isValidRummikub(tiles)) return {tiles};}
+    }
+  }
+  return null;
+}
+
+/* ══ 對稱延伸桌面算式：在等號兩側各加相同的子表達式
+   e.g. 桌上 4+2=6，手上有 +3（數字3），可變成 4+2+3 = 6+3
+   這讓沒有等號的玩家也能利用桌面算式出牌 ══ */
+function tryExtendBoardExpr(hand,board,thisTurnIds){
+  const handNums=hand.filter(t=>!t.isOp&&!t.isJoker);
+  const handOps=hand.filter(t=>t.isOp&&t.op!=='=');
+  if(handOps.length===0||handNums.length===0) return null;
+
+  for(let si=0;si<board.length;si++){
+    const set=board[si];
+    if(!set.some(t=>t.isOp&&t.op==='=')||!isValidExpr(set)) continue;
+    // Skip sets containing player-placed tiles OR AI's own current-turn tiles
+    if(set.some(t=>G.playerPlacedIds.has(t.id))) continue;
+    if(thisTurnIds&&set.some(t=>thisTurnIds.has(t.id))) continue;
+
+    const exprStr=set.map(t=>t.isOp?t.op:String(t.number)).join('');
+    const parts=exprStr.split('=');
+    // Get the common value from first part
+    let val;
+    try{
+      const s=parts[0].replace(/×/g,'*').replace(/÷/g,'/');
+      val=Function('"use strict";return('+s+')')();
+      if(!Number.isInteger(val)) continue;
+    }catch(e){continue;}
+
+    // Try symmetric extension: add (op num) to BOTH sides (≤5 new tiles total)
+    for(const op of handOps){
+      for(let ni=0;ni<handNums.length;ni++){
+        const num=handNums[ni];
+        const delta=calcOp(val,num.number,op.op);
+        if(delta===null) continue;
+
+        const op2=handOps.find(x=>x.id!==op.id&&x.op===op.op);
+        const num2=handNums.find((x,i)=>i!==ni&&x.number===num.number);
+        if(!op2||!num2) continue;
+
+        // Insert op+num before last segment's end, op2+num2 after last segment
+        const eqIdx=set.findLastIndex?set.findLastIndex(t=>t.isOp&&t.op==='='):
+          set.reduce((acc,t,i)=>t.isOp&&t.op==='='?i:acc,-1);
+        if(eqIdx<0) continue;
+        // new tiles to add: op,num (LHS side) + op2,num2 (RHS side) = 4 tiles ≤ 5 ✓
+        const newSet=[...set.slice(0,eqIdx),op,num,set[eqIdx],...set.slice(eqIdx+1),op2,num2];
+        if(!isValidExpr(newSet)) continue;
+
+        return {setIdx:si, newSet, usedTiles:[op,num,op2,num2]};
+      }
+    }
+  }
+  return null;
+}
+
+function findPureMeld(hand,board,isFirst,needCheck){
+  // First try without jokers
+  for(let c of COLORS){
+    const cc=hand.filter(t=>t.color===c&&!t.isOp&&!t.isJoker).sort((a,b)=>a.number-b.number);
+    for(let i=0;i<cc.length-2;i++){
+      for(let len=Math.min(cc.length-i,10);len>=3;len--){
+        const sl=cc.slice(i,i+len),ns=sl.map(t=>t.number);
+        let ok=true;for(let j=1;j<ns.length;j++) if(ns[j]-ns[j-1]!==1){ok=false;break;}
+        if(ok){const sc=sl.reduce((s,t)=>s+t.number,0);if(!isFirst||!needCheck||sc>=30) return {tiles:sl};}
+      }
+    }
+  }
+  // Without jokers: same-number groups
+  for(let n=1;n<=13;n++){
+    const gr=hand.filter(t=>t.number===n&&!t.isOp&&!t.isJoker);
+    const u=[],seen=new Set();for(let t of gr) if(!seen.has(t.color)){seen.add(t.color);u.push(t);}
+    if(u.length>=3){const sc=u.slice(0,3).reduce((s,t)=>s+t.number,0);if(!isFirst||!needCheck||sc>=30) return {tiles:u.slice(0,Math.min(4,u.length))};}
+  }
+  // With jokers: try to maximize tiles in run
+  const jokers=hand.filter(t=>t.isJoker);
+  if(jokers.length>0){
+    let bestMeld=null, bestLen=0;
+    for(let c of COLORS){
+      const cc=hand.filter(t=>t.color===c&&!t.isOp&&!t.isJoker).sort((a,b)=>a.number-b.number);
+      if(cc.length<1) continue;
+      // Try inserting joker(s) to form the longest run
+      // Strategy: for each pair of real tiles, fill gaps, then also try extending edges
+      // Try all possible run spans using available real tiles + jokers
+      for(let mn=1;mn<=13;mn++){
+        for(let span=3;span<=cc.length+jokers.length&&span<=13;span++){
+          const mx=mn+span-1;if(mx>13) break;
+          const needed=[];
+          for(let n2=mn;n2<=mx;n2++) needed.push(n2);
+          const realUsed=[];let jokerCount=0;let ok=true;
+          for(const n2 of needed){
+            const t=cc.find(x=>x.number===n2&&!realUsed.includes(x));
+            if(t) realUsed.push(t);
+            else{jokerCount++;if(jokerCount>jokers.length){ok=false;break;}}
+          }
+          if(!ok) continue;
+          // Build tile array
+          const tiles=[];let ji=0;
+          for(const n2 of needed){
+            const t=realUsed.find(x=>x.number===n2);
+            if(t) tiles.push(t);
+            else tiles.push(jokers[ji++]);
+          }
+          if(tiles.length>=3&&isValidRummikub(tiles)){
+            const sc=tiles.filter(t=>!t.isJoker).reduce((s,t)=>s+t.number,0);
+            if((!isFirst||!needCheck||sc>=30)&&tiles.length>bestLen){
+              bestLen=tiles.length;bestMeld=tiles;
+            }
+          }
+        }
+      }
+    }
+    if(bestMeld) return {tiles:bestMeld};
+  }
+  return null;
+}
+function findExtension(hand,board){
+  for(let si=0;si<board.length;si++){
+    const set=board[si];if(set.some(t=>t.isOp)) continue;
+    const real=set.filter(t=>!t.isJoker);if(!real.length) continue;
+    const nums=real.map(t=>t.number),cols=real.map(t=>t.color);
+    const isRun=new Set(cols).size===1&&new Set(nums).size===nums.length,isGroup=new Set(nums).size===1;
+    if(isRun){const c=cols[0],mn=Math.min(...nums),mx=Math.max(...nums);
+      if(mn>1){const t=hand.find(h=>!h.isJoker&&!h.isOp&&h.color===c&&h.number===mn-1);if(t) return {setIdx:si,tile:t};}
+      if(mx<13){const t=hand.find(h=>!h.isJoker&&!h.isOp&&h.color===c&&h.number===mx+1);if(t) return {setIdx:si,tile:t};}
+    }
+    if(isGroup&&set.length<4){const num=nums[0],usedC=new Set(cols);
+      const t=hand.find(h=>!h.isJoker&&!h.isOp&&h.number===num&&!usedC.has(h.color));if(t) return {setIdx:si,tile:t};}
+  }
+  return null;
+}
+function findExprMeld(hand,board,isFirst,needCheck,maxTiles=Infinity){
+  const numTiles=hand.filter(t=>!t.isOp&&!t.isJoker);
+  // Limit: max 1 equals, max 3 operators per expression
+  const opTiles=hand.filter(t=>t.isOp&&t.op!=='=').slice(0,3);
+  const eqTiles=hand.filter(t=>t.isOp&&t.op==='=').slice(0,1);
+  if(eqTiles.length===0||numTiles.length===0) return null;
+
+  function evalStr(s){
+    s=s.replace(/×/g,'*').replace(/÷/g,'/');
+    if(!s||!/^[\d+\-*/]+$/.test(s)||/[+\-*/]{2,}/.test(s)||/^[+\-*/]/.test(s)||/[+\-*/]$/.test(s)) return null;
+    try{const v=Function('"use strict";return('+s+')')();return Number.isInteger(v)?v:null;}catch(e){return null;}
+  }
+
+  // Pre-build short RHS (1 or 3 tiles) grouped by value for fast lookup
+  const shortSeqs=new Map(); // val -> [{tiles}]
+  function addShort(tiles,val){
+    if(!shortSeqs.has(val)) shortSeqs.set(val,[]);
+    shortSeqs.get(val).push(tiles);
+  }
+  for(const a of numTiles) addShort([a],a.number);
+  for(const op of opTiles){
+    for(let ai=0;ai<numTiles.length;ai++){
+      for(let bi=0;bi<numTiles.length;bi++){
+        if(ai===bi) continue;
+        const a=numTiles[ai],b=numTiles[bi];
+        if(op.id===a.id||op.id===b.id) continue;
+        const v=calcOp(a.number,b.number,op.op);
+        if(v!==null) addShort([a,op,b],v);
+      }
+    }
+  }
+
+  // DFS for LHS; at each valid LHS value, immediately check if a disjoint RHS exists
+  // Key optimization: only recurse deeper if current partial LHS COULD lead to 30+ numSum
+  // Also: prune if no RHS candidate exists for current LHS value
+  let result=null;
+  let calls=0;
+  const MAX_CALLS=200000; // safety limit
+
+  function dfsLhs(cur,usedIds,lastWasNum,curStr,curNumSum){
+    if(result||calls>MAX_CALLS) return;
+    calls++;
+
+    if(cur.length>=1&&lastWasNum){
+      const val=evalStr(curStr);
+      if(val!==null&&Number.isInteger(val)){
+        // Try all RHS candidates with this value
+        const rhsCandidates=shortSeqs.get(val)||[];
+        for(const rhs of rhsCandidates){
+          if(rhs.some(t=>usedIds.has(t.id))) continue;
+          const eq=eqTiles.find(t=>!usedIds.has(t.id)&&!rhs.some(x=>x.id===t.id));
+          if(!eq) continue;
+          const finalTiles=[...cur,eq,...rhs];
+          if(finalTiles.length<3) continue;
+          if(finalTiles.length>maxTiles) continue;
+          if(!isValidExpr(finalTiles)) continue;
+          // Block trivial expressions where LHS and RHS are identical single numbers (e.g. 6=6)
+          const lhsNums=cur.filter(t=>!t.isOp);
+          const rhsNums=rhs.filter(t=>!t.isOp);
+          if(lhsNums.length===1&&rhsNums.length===1&&lhsNums[0].number===rhsNums[0].number) continue;
+          if(isFirst&&needCheck){
+            const rhsNumSum=rhs.filter(t=>!t.isOp&&!t.isJoker).reduce((s,t)=>s+t.number,0);
+            // If numSum not enough, DON'T return — let DFS continue extending LHS
+            if(curNumSum+rhsNumSum<30) continue;
+          }
+          result=finalTiles;
+          return;
+        }
+        // If we found RHS candidates but none met 30pts, don't stop — continue extending LHS
+      }
+    }
+
+    // Continue building LHS — limit depth
+    const numCount=cur.filter(t=>!t.isOp).length;
+    if(numCount>=5) return; // ④ max 5 nums on LHS side
+    const opCount=cur.filter(t=>t.isOp).length;
+    if(opCount>=3) return; // max 3 operators on LHS
+
+    if(lastWasNum){
+      for(const op of opTiles){
+        if(usedIds.has(op.id)) continue;
+        usedIds.add(op.id);cur.push(op);
+        dfsLhs(cur,usedIds,false,curStr+op.op,curNumSum);
+        cur.pop();usedIds.delete(op.id);
+        if(result) return;
+      }
+    } else {
+      for(const num of numTiles){
+        if(usedIds.has(num.id)) continue;
+        usedIds.add(num.id);cur.push(num);
+        dfsLhs(cur,usedIds,true,curStr+String(num.number),curNumSum+num.number);
+        cur.pop();usedIds.delete(num.id);
+        if(result) return;
+      }
+    }
+  }
+
+  // Sort numTiles: try larger numbers first to hit 30-point threshold sooner
+  const sortedNums=[...numTiles].sort((a,b)=>b.number-a.number);
+  for(const first of sortedNums){
+    calls=0; // reset call count per starting tile
+    dfsLhs([first],new Set([first.id]),true,String(first.number),first.number);
+    if(result) return {tiles:result};
+  }
+  return null;
+}
+/* ══ AI 拆解桌面算式，重組新算式 ══
+   e.g. 桌上有 2=9-7，電腦手上有 *,5
+   AI 可以把這組拆掉，用 9,7,2 配合手牌重組為 7*2=9+5 等
+   條件：新組合必須合法，且只要「原算式所有牌 + 部分手牌」都能重組，就可以 */
+function tryDismantleExprForNewExpr(hand,board){
+  const handNums=hand.filter(t=>!t.isOp&&!t.isJoker);
+  const handOps=hand.filter(t=>t.isOp&&t.op!=='=');
+  const handEqs=hand.filter(t=>t.isOp&&t.op==='=');
+
+  for(let si=0;si<board.length;si++){
+    const set=board[si];
+    if(!set.some(t=>t.isOp&&t.op==='=')||!isValidExpr(set)) continue;
+    // Skip sets containing any player-placed tile
+    if(set.some(t=>G.playerPlacedIds.has(t.id))) continue;
+    const boardNums=set.filter(t=>!t.isOp&&!t.isJoker);
+    const boardOps=set.filter(t=>t.isOp&&t.op!=='=');
+    const boardEqs=set.filter(t=>t.isOp&&t.op==='=');
+
+    // Pool: all board tiles + hand tiles (treat them equally for forming new expr)
+    const allNums=[...boardNums,...handNums];
+    const allOps=[...boardOps,...handOps];
+    const allEqs=[...boardEqs,...handEqs];
+
+    if(allEqs.length===0) continue;
+
+    // Build segments from the combined pool
+    function buildCombinedSegs(){
+      const segs=[];
+      for(const a of allNums) segs.push({tiles:[a],val:a.number});
+      for(const op of allOps){
+        for(let ai=0;ai<allNums.length;ai++){
+          for(let bi=0;bi<allNums.length;bi++){
+            if(ai===bi) continue;
+            const a=allNums[ai],b=allNums[bi];
+            if(op.id===a.id||op.id===b.id) continue;
+            const v=calcOp(a.number,b.number,op.op);
+            if(v!==null) segs.push({tiles:[a,op,b],val:v});
+          }
+        }
+      }
+      for(let o1=0;o1<allOps.length;o1++){
+        for(let o2=0;o2<allOps.length;o2++){
+          if(o1===o2) continue;
+          const op1=allOps[o1],op2=allOps[o2];
+          for(let ai=0;ai<allNums.length;ai++){
+            for(let bi=0;bi<allNums.length;bi++){
+              if(bi===ai) continue;
+              for(let ci=0;ci<allNums.length;ci++){
+                if(ci===ai||ci===bi) continue;
+                const a=allNums[ai],b=allNums[bi],c=allNums[ci];
+                const r1=calcOp(a.number,b.number,op1.op);if(r1===null) continue;
+                const v=calcOp(r1,c.number,op2.op);
+                if(v!==null) segs.push({tiles:[a,op1,b,op2,c],val:v});
+              }
+            }
+          }
+        }
+      }
+      return segs;
+    }
+
+    const segs=buildCombinedSegs();
+    const segsByVal={};
+    for(const s of segs){if(!segsByVal[s.val])segsByVal[s.val]=[];segsByVal[s.val].push(s);}
+
+    const boardTileIds=new Set(set.map(t=>t.id));
+
+    // Try to find seg1=seg2 where:
+    // - together they use at LEAST one board tile (so we're actually using the board)
+    // - together they use at LEAST one hand tile (so AI is contributing)
+    // - no tile is used twice
+    for(const s1 of segs){
+      const peers=segsByVal[s1.val]||[];
+      const used1=new Set(s1.tiles.map(t=>t.id));
+      for(const s2 of peers){
+        if(s2.tiles.some(t=>used1.has(t.id))) continue;
+        const eq=allEqs.find(t=>!used1.has(t.id)&&!s2.tiles.some(x=>x.id===t.id));
+        if(!eq) continue;
+        const allUsed=[...s1.tiles,eq,...s2.tiles];
+        const usesBoard=allUsed.some(t=>boardTileIds.has(t.id));
+        const usesHand=allUsed.some(t=>!boardTileIds.has(t.id));
+        if(!usesBoard||!usesHand) continue;
+        const finalTiles=allUsed;
+        if(!isValidExpr(finalTiles)) continue;
+        // Make sure all tiles actually exist (no duplicates, all come from actual tile objects)
+        const usedIds=new Set(finalTiles.map(t=>t.id));
+        if(usedIds.size!==finalTiles.length) continue;
+        // hand tiles used
+        const handUsed=finalTiles.filter(t=>!boardTileIds.has(t.id));
+        return {setIdx:si, newBoardExpr:finalTiles, usedFromBoard:set, handTilesUsed:handUsed};
+      }
+    }
+  }
+  return null;
+}
+
+function calcOp(a,b,op){
+  if(op==='+') return a+b;
+  if(op==='-') return a-b;
+  if(op==='×') return a*b;
+  if(op==='÷'){if(b===0||a%b!==0) return null;return a/b;}
+  return null;
+}
+
+function endGame(wi){
+  G.gameOver=true;const w=G.players[wi];
+  const stats=G.players.map(p=>`${p.name}：${p.hand.length}張剩餘，任務 ${p.tasks.filter(t=>t.done).length}/${p.tasks.length} 完成`).join('<br>');
+  showModal(`<h3>遊戲結束！</h3><p>${w.name} ${w.tasks.every(t=>t.done)?'完成任務並出完手牌，獲得勝利！':'出完手牌但任務未全部完成。'}</p><div class="stats">${stats}</div><button class="btn btn-primary" onclick="initGame()" style="width:100%;margin-top:8px">再來一局</button>`);
+  render();
+}
+function sortHand(by){
+  const h=G.players[0].hand;
+  if(by==='color') h.sort((a,b)=>{if(a.isOp&&!b.isOp) return 1;if(!a.isOp&&b.isOp) return -1;if(a.isOp) return a.op<b.op?-1:1;return COLORS.indexOf(a.color)-COLORS.indexOf(b.color)||a.number-b.number;});
+  else h.sort((a,b)=>{if(a.isOp&&!b.isOp) return 1;if(!a.isOp&&b.isOp) return -1;if(a.isOp) return a.op<b.op?-1:1;return a.number-b.number||COLORS.indexOf(a.color)-COLORS.indexOf(b.color);});
+  G.selectedTiles=[];renderHand();renderControls();
+}
+function showRules(){
+  showModal(`<h3>規則說明</h3><div style="font-size:11px;color:#384878;line-height:1.9;text-align:left;max-height:60vh;overflow-y:auto;">
+<b style="color:#4a5888">獲勝條件</b><br>出完所有手牌，且完成任務<br><br>
+<b style="color:#4a5888">數字牌組合</b><br>• 順子：同色連續數字，至少3張<br>• 同數組：同數字不同顏色，3-4張<br><br>
+<b style="color:#4a5888">功能牌（算式）</b><br>• 深藍：+ - × ÷（各3-5張）<br>• 深綠：= 等號（8張）<br>• 含=號且兩側整數相等即合法<br>• 例：4+3=7 ✓　6+4+2=12 ✓<br><br>
+<b style="color:#4a5888">首次出牌30分</b><br>• 數字組合：新放牌的面值加總<br>• 算式：算式內所有數字牌面值加總<br>• 例：8=7+1=8=4*2 → 8+7+1+8+4+2=30 ✓<br>• 例：4+5=9 → 4+5+9=18（不足30）<br><br>
+<b style="color:#4a5888">Joker 規則</b><br>• Joker 可以移動，前提是移走後剩餘牌仍合法<br>• 例：5 5 5 J → J可移走（555仍合法）<br><br>
+<b style="color:#4a5888">任務卡</b><br>① 偶數和：本回合有一合法組合點數和為偶數<br>② 兩個算式：本回合出了2個以上算式<br><br>
+<b style="color:#4a5888">查看電腦牌面</b><br>點擊電腦名字框可翻開/隱藏其手牌與任務</div>
+<button class="btn btn-primary" onclick="hideModal()" style="width:100%;margin-top:10px">了解！</button>`);
+}
+function setMsg(t,type=''){const el=document.getElementById('msg-bar');el.className='msg-bar'+(type?' '+type:'');el.textContent=t;}
+initGame();
+</script>
+</body>
+</html>
