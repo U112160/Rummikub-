@@ -14,7 +14,7 @@ body { background: #e7eef9; color: #383c58; font-family: Georgia, serif; min-hei
 .score-card.active { border-color: #7888b8; background: rgba(80,100,160,0.18); }
 .score-card .sname { color: #7888b8; font-size: 11px; }
 .score-card .scount { font-size: 15px; font-weight: bold; color: #4a5888; }
-.opponents { display: flex; gap: 6px; margin-bottom: 6px; }
+.opponents { display: flex; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }
 .opponent { background: rgba(180,200,230,0.35); border: 1px solid #c0cce8; border-radius: 5px; padding: 4px 7px; font-size: 13px; flex: 1; text-align: center; cursor: pointer; transition: border-color 0.15s; color: #383c58; }
 .opponent:hover { border-color: #7888b8; }
 .opponent.active-turn { border-color: #4a5888; background: rgba(160,185,225,0.45); }
@@ -103,16 +103,27 @@ body { background: #e7eef9; color: #383c58; font-family: Georgia, serif; min-hei
       <div class="btn-gap">
         <button class="btn btn-primary btn-large" onclick="showHostSetup()">建立遊戲（主機）</button>
         <button class="btn btn-secondary btn-large" onclick="showJoinSetup()">加入遊戲</button>
-        <button class="btn" style="background:#aab8d0;color:#fff" onclick="startLocal()">單機遊玩（對電腦）</button>
       </div>
     </div>
     <div id="lb-host" style="display:none">
-      <p>分享以下代碼給其他玩家</p>
-      <div id="lb-code" class="lobby-code" title="點擊複製" onclick="copyCode()">----</div>
-      <div class="lobby-status" id="lb-host-status">等待玩家連線...</div>
-      <div class="lobby-status" id="lb-conn-status"></div>
-      <button class="btn btn-primary" id="lb-start-btn" onclick="hostStartGame()" disabled style="width:100%;margin-top:8px">開始遊戲</button>
-      <button class="btn" style="background:#aab8d0;color:#fff;width:100%;margin-top:6px" onclick="backToMode()">返回</button>
+      <!-- Step 1: choose player count -->
+      <div id="lb-count-select">
+        <p style="margin-bottom:10px">總共幾位玩家？</p>
+        <div style="display:flex;gap:8px;justify-content:center">
+          <button class="btn btn-primary btn-large" onclick="createRoom(2)">2人</button>
+          <button class="btn btn-primary btn-large" onclick="createRoom(3)">3人</button>
+          <button class="btn btn-primary btn-large" onclick="createRoom(4)">4人</button>
+        </div>
+      </div>
+      <!-- Step 2: show room code -->
+      <div id="lb-room-info" style="display:none">
+        <p>將代碼分享給其他玩家</p>
+        <div id="lb-code" class="lobby-code" title="點擊複製" onclick="copyCode()">----</div>
+        <div class="lobby-status" id="lb-host-status"></div>
+        <div class="lobby-status" id="lb-conn-status"></div>
+        <button class="btn btn-primary" id="lb-start-btn" onclick="hostStartGame()" disabled style="width:100%;margin-top:8px">開始遊戲</button>
+      </div>
+      <button class="btn" style="background:#aab8d0;color:#fff;width:100%;margin-top:10px" onclick="backToMode()">返回</button>
     </div>
     <div id="lb-join" style="display:none">
       <input class="lobby-input" id="lb-name" placeholder="你的名字（最多8字）" maxlength="8">
@@ -167,52 +178,66 @@ let G={}, dragState=null, jokerPending=null;
 
 /* ══════════ NETWORK ══════════ */
 let NET={
-  mode:'local',        // 'local' | 'host' | 'client'
+  mode:'host',         // 'host' | 'client'
   peer:null,
-  playerConns:[null,null,null], // host side: conn per player index (idx 0=self=null)
+  playerConns:[],      // host side: conn per player index (idx 0=self=null), size=playerCount
   hostConn:null,       // client side: conn to host
   myPlayerIndex:0,
-  pendingAction:false
+  playerCount:3        // chosen by host (2-4)
 };
 function myP(){return NET.myPlayerIndex;}
 function isMyTurn(){return G.currentPlayer===myP()&&!G.gameOver;}
-function isHost(){return NET.mode==='local'||NET.mode==='host';}
+function isHost(){return NET.mode==='host';}
 function isClient(){return NET.mode==='client';}
 
 /* ── Lobby UI helpers ── */
 function showHostSetup(){
   document.getElementById('lb-mode').style.display='none';
   document.getElementById('lb-host').style.display='block';
+}
+function createRoom(count){
+  NET.playerCount=count;
+  NET.playerConns=new Array(count).fill(null); // index 0=host(null), 1..count-1=remote slots
+  NET.mode='host';
+  document.getElementById('lb-count-select').style.display='none';
+  document.getElementById('lb-room-info').style.display='block';
   document.getElementById('lb-host-status').textContent='連線中，請稍候...';
   const roomId='RMK-'+Math.random().toString(36).slice(2,8).toUpperCase();
   const peer=new Peer(roomId);
-  NET.peer=peer;NET.mode='host';
+  NET.peer=peer;
   peer.on('open',id=>{
     document.getElementById('lb-code').textContent=id;
-    document.getElementById('lb-host-status').textContent='等待玩家連線（最多2人）';
-    updateStartBtn();
+    updateConnStatus();updateStartBtn();
   });
   peer.on('error',e=>{document.getElementById('lb-host-status').textContent='連線錯誤：'+e.type;});
   peer.on('connection',conn=>{
     const slotIdx=NET.playerConns.findIndex((c,i)=>i>0&&c===null);
-    if(slotIdx===-1){conn.close();return;}
+    if(slotIdx===-1){conn.send({type:'room_full'});conn.close();return;}
     NET.playerConns[slotIdx]=conn;
     conn.on('open',()=>{
-      // Ask for name
-      conn.send({type:'slot_assigned',playerIndex:slotIdx});
+      conn.send({type:'slot_assigned',playerIndex:slotIdx,playerCount:count});
       updateConnStatus();updateStartBtn();
     });
     conn.on('data',msg=>handleClientMessage(slotIdx,msg));
-    conn.on('close',()=>{NET.playerConns[slotIdx]=null;updateConnStatus();updateStartBtn();});
+    conn.on('close',()=>{
+      if(document.getElementById('lobby').style.display!=='none'){
+        NET.playerConns[slotIdx]=null;updateConnStatus();updateStartBtn();
+      } else if(!G.gameOver){
+        setMsg(`${G.players[slotIdx]?.name||'玩家'} 已離線，遊戲中止。`,'error');
+        G.gameOver=true;render();
+      }
+    });
   });
 }
 function updateConnStatus(){
   const joined=NET.playerConns.filter(c=>c!==null).length;
-  document.getElementById('lb-conn-status').textContent=`已加入：${joined}/2 位玩家`;
+  const need=NET.playerCount-1;
+  document.getElementById('lb-host-status').textContent=`等待玩家加入（需要 ${need} 人）`;
+  document.getElementById('lb-conn-status').textContent=`已加入：${joined}／${need} 人`;
 }
 function updateStartBtn(){
   const joined=NET.playerConns.filter(c=>c!==null).length;
-  document.getElementById('lb-start-btn').disabled=joined===0;
+  document.getElementById('lb-start-btn').disabled=joined<NET.playerCount-1;
 }
 function copyCode(){
   const code=document.getElementById('lb-code').textContent;
@@ -225,7 +250,9 @@ function showJoinSetup(){
 }
 function backToMode(){
   if(NET.peer){NET.peer.destroy();NET.peer=null;}
-  NET.mode='local';NET.playerConns=[null,null,null];NET.hostConn=null;NET.myPlayerIndex=0;
+  NET.mode='host';NET.playerConns=[];NET.hostConn=null;NET.myPlayerIndex=0;NET.playerCount=3;
+  document.getElementById('lb-count-select').style.display='block';
+  document.getElementById('lb-room-info').style.display='none';
   document.getElementById('lb-host').style.display='none';
   document.getElementById('lb-join').style.display='none';
   document.getElementById('lb-mode').style.display='block';
@@ -246,17 +273,13 @@ function joinGame(){
     });
     conn.on('data',msg=>handleHostMessage(msg));
     conn.on('error',e=>{document.getElementById('lb-join-status').textContent='連線失敗：'+e;});
-    conn.on('close',()=>{if(!G.gameOver)setMsg('與主機連線中斷。','error');});
+    conn.on('close',()=>{if(!G.gameOver)setMsg('與主機連線中斷，遊戲中止。','error');});
   });
   peer.on('error',e=>{document.getElementById('lb-join-status').textContent='錯誤：'+e.type;});
 }
-function startLocal(){
-  NET.mode='local';NET.myPlayerIndex=0;
-  hideLobby();initGame();
-}
 function hostStartGame(){
   hideLobby();
-  initGame(); // initGame() calls broadcastState() at the end, which sends state_update to all clients
+  initGame(); // initGame() calls broadcastState() at end → sends state_update to all clients
 }
 function hideLobby(){
   document.getElementById('lobby').style.display='none';
@@ -265,7 +288,7 @@ function hideLobby(){
 
 /* ── Host broadcasts state to all clients ── */
 function broadcastState(msgText,winnerIdx){
-  if(NET.mode==='local') return;
+  if(NET.mode!=='host') return;
   const publicState={
     boardSets:G.boardSets,
     currentPlayer:G.currentPlayer,
@@ -340,7 +363,12 @@ function handleClientMessage(playerIdx,msg){
 function handleHostMessage(msg){
   if(msg.type==='slot_assigned'){
     NET.myPlayerIndex=msg.playerIndex;
-    document.getElementById('lb-join-status').textContent=`你是玩家 ${msg.playerIndex}，等待主機開始...`;
+    NET.playerCount=msg.playerCount||3;
+    document.getElementById('lb-join-status').textContent=`已入座（玩家 ${msg.playerIndex}），等待主機開始...`;
+    return;
+  }
+  if(msg.type==='room_full'){
+    document.getElementById('lb-join-status').textContent='❌ 房間已滿，請確認代碼或等待下一局。';
     return;
   }
   if(msg.type==='game_start'){
@@ -411,12 +439,12 @@ function initGame(){
   shuffle(pool);
   const ts=shuffle([...ALL_TASKS]);
   let players=[];
-  for(let i=0;i<3;i++){
+  const n=NET.playerCount||3;
+  for(let i=0;i<n;i++){
     const def=ts[i % ts.length];
     const myTask={...def, done:false, progress:0};
-    const defaultNames=['你','電腦1','電腦2'];
     const connName=NET.playerConns[i]&&NET.playerConns[i]._peerName;
-    const name=i===0?'你':(connName||defaultNames[i]);
+    const name=i===0?'你':(connName||`玩家${i+1}`);
     players.push({name, hand:pool.splice(0,14), hasPlayed:false, tasks:[myTask], revealHand:false});
   }
   G={pool, players, boardSets:[], currentPlayer:0, selectedTiles:[],
@@ -1177,17 +1205,11 @@ function nextTurn(){
   if(G.currentPlayer===myP()){
     render();
     setMsg('✦ 輪到你了！記得點任務卡確認完成！','info');
-    if(isHost()) broadcastState(`輪到你了！`);
-  } else if(isHost()&&NET.playerConns[G.currentPlayer]){
-    // Remote human player's turn — just broadcast and wait
-    render();
-    broadcastState(`輪到 ${G.players[G.currentPlayer].name} 出牌！`);
-  } else if(isHost()){
-    // AI player's turn
-    render();
-    setTimeout(aiTurn,900);
+    if(isHost()) broadcastState('輪到你了！');
   } else {
+    // Remote human player's turn — broadcast and wait (no AI)
     render();
+    if(isHost()) broadcastState(`輪到 ${G.players[G.currentPlayer].name} 出牌！`);
   }
 }
 
@@ -1887,7 +1909,7 @@ function showRules(){
 <b style="color:#4a5888">首次出牌30分</b><br>• 數字組合：新放牌的面值加總<br>• 算式：算式內所有數字牌面值加總<br>• 例：8=7+1=8=4*2 → 8+7+1+8+4+2=30 ✓<br>• 例：4+5=9 → 4+5+9=18（不足30）<br><br>
 <b style="color:#4a5888">Joker 規則</b><br>• Joker 可以移動，前提是移走後剩餘牌仍合法<br>• 例：5 5 5 J → J可移走（555仍合法）<br><br>
 <b style="color:#4a5888">任務卡</b><br>① 偶數和：本回合有一合法組合點數和為偶數<br>② 兩個算式：本回合出了2個以上算式<br><br>
-<b style="color:#4a5888">查看電腦牌面</b><br>點擊電腦名字框可翻開/隱藏其手牌與任務</div>
+<b style="color:#4a5888">查看其他玩家牌面</b><br>主機可點擊對手欄位翻開/隱藏其手牌</div>
 <button class="btn btn-primary" onclick="hideModal()" style="width:100%;margin-top:10px">了解！</button>`);
 }
 function setMsg(t,type=''){const el=document.getElementById('msg-bar');el.className='msg-bar'+(type?' '+type:'');el.textContent=t;}
