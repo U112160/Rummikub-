@@ -25,7 +25,7 @@ body { background: #e7eef9; color: #383c58; font-family: Georgia, serif; min-hei
 .board-label { font-size: 13px; color: #4a68a8; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
 .sets-container { display: flex; flex-wrap: wrap; gap: 9px; min-height: 120px; align-content: flex-start; }
 .set-wrapper { display: flex; flex-direction: column; }
-.set-group { display: flex; gap: 2px; background: rgba(180,205,240,0.55); border: 1.5px solid #88aad8; border-radius: 5px; padding: 5px 6px; min-width: 34px; min-height: 54px; align-items: center; transition: border-color 0.15s; }
+.set-group { display: flex; gap: 5px; background: rgba(180,205,240,0.55); border: 1.5px solid #88aad8; border-radius: 5px; padding: 6px 8px; min-width: 34px; min-height: 58px; align-items: center; transition: border-color 0.15s; }
 .set-group.valid-set { border-color: #6a9a48; }
 .set-group.invalid-set { border-color: #88aad8; }
 .set-group.drag-over { border-color: #3055aa !important; background: rgba(60,100,200,0.10) !important; }
@@ -34,7 +34,7 @@ body { background: #e7eef9; color: #383c58; font-family: Georgia, serif; min-hei
 .hand-area { background: rgba(240,245,255,0.70); border: 1px solid #b8c8e8; border-radius: 7px; padding: 7px; margin-bottom: 6px; }
 .hand-top { display: flex; align-items: center; gap: 5px; margin-bottom: 4px; flex-wrap: wrap; }
 .hand-label { font-size: 13px; color: #4a68a8; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
-.hand-tiles { display: flex; flex-wrap: wrap; gap: 3px; min-height: 50px; border-radius: 5px; padding: 3px; transition: background 0.15s; }
+.hand-tiles { display: flex; flex-wrap: wrap; gap: 8px; min-height: 58px; border-radius: 5px; padding: 5px; transition: background 0.15s; }
 .hand-tiles.drag-over { background: rgba(80,100,160,0.04); outline: 1px dashed #7080c0; border-radius: 5px; }
 .task-area { background: rgba(240,245,255,0.70); border: 1px solid #b8c8e8; border-radius: 7px; padding: 9px; margin-bottom: 6px; }
 .task-area-label { font-size: 13px; color: #6878a8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 7px; font-weight: bold; }
@@ -48,7 +48,8 @@ body { background: #e7eef9; color: #383c58; font-family: Georgia, serif; min-hei
 .task-pending { display: none; }
 .task-progress { font-size: 12px; color: #5a6aaa; margin-top: 2px; }
 /* Tiles */
-.tile { width: 32px; height: 46px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 900; border: 2px solid #88aad8; background: #f0f5ff; transition: transform 0.12s, box-shadow 0.12s; cursor: grab; flex-shrink: 0; }
+.tile { width: 36px; height: 52px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 900; border: 2px solid #88aad8; background: #f0f5ff; transition: transform 0.12s, box-shadow 0.12s; cursor: grab; flex-shrink: 0; }
+.tile.hand-drop-target { outline: 3px solid #4a68a8; outline-offset: 2px; transform: translateX(4px); }
 .tile:active { cursor: grabbing; }
 .tile.dragging { opacity: 0.25; }
 .tile.selected { transform: translateY(-6px); box-shadow: 0 4px 8px rgba(60,100,200,0.35); border-color: #3055aa; }
@@ -106,6 +107,8 @@ body { background: #e7eef9; color: #383c58; font-family: Georgia, serif; min-hei
       </div>
     </div>
     <div id="lb-host" style="display:none">
+      <!-- Step 0: host name -->
+      <input class="lobby-input" id="lb-host-name" placeholder="你的名字（最多8字）" maxlength="8" style="margin-top:4px">
       <!-- Step 1: choose player count -->
       <div id="lb-count-select">
         <p style="margin-bottom:10px">總共幾位玩家？</p>
@@ -183,7 +186,8 @@ let NET={
   playerConns:[],      // host side: conn per player index (idx 0=self=null), size=playerCount
   hostConn:null,       // client side: conn to host
   myPlayerIndex:0,
-  playerCount:3        // chosen by host (2-4)
+  playerCount:3,       // chosen by host (2-4)
+  myName:'玩家'        // filled from lobby
 };
 function myP(){return NET.myPlayerIndex;}
 function isMyTurn(){return G.currentPlayer===myP()&&!G.gameOver;}
@@ -196,6 +200,7 @@ function showHostSetup(){
   document.getElementById('lb-host').style.display='block';
 }
 function createRoom(count){
+  NET.myName=document.getElementById('lb-host-name').value.trim()||'玩家1';
   NET.playerCount=count;
   NET.playerConns=new Array(count).fill(null); // index 0=host(null), 1..count-1=remote slots
   NET.mode='host';
@@ -259,6 +264,7 @@ function backToMode(){
 }
 function joinGame(){
   const name=document.getElementById('lb-name').value.trim()||'玩家';
+  NET.myName=name;
   const code=document.getElementById('lb-roomcode').value.trim();
   if(!code){document.getElementById('lb-join-status').textContent='請輸入代碼';return;}
   document.getElementById('lb-join-status').textContent='連線中...';
@@ -411,14 +417,16 @@ function handleHostMessage(msg){
       if(!G.selectedTiles) G.selectedTiles=[];
       if(G.turnBackup===undefined) G.turnBackup=null;
     }
-    render();
+    // Skip hand re-render when it's not my turn (avoids flicker/layout jump)
+    render(G.currentPlayer!==myP());
     if(msg.msg) setMsg(msg.msg,G.currentPlayer===myP()?'success':'info');
     if(ps.winnerIdx>=0) setTimeout(()=>endGame(ps.winnerIdx),300);
     return;
   }
   if(msg.type==='drew_tile'){
     G.players[myP()].hand.push(msg.tile);
-    render();
+    // Only append tile to hand without disturbing the rest of the layout
+    renderHand(); renderScores();
     return;
   }
   if(msg.type==='error'){
@@ -444,7 +452,7 @@ function initGame(){
     const def=ts[i % ts.length];
     const myTask={...def, done:false, progress:0};
     const connName=NET.playerConns[i]&&NET.playerConns[i]._peerName;
-    const name=i===0?'你':(connName||`玩家${i+1}`);
+    const name=i===0?NET.myName:(connName||`玩家${i+1}`);
     players.push({name, hand:pool.splice(0,14), hasPlayed:false, tasks:[myTask], revealHand:false});
   }
   G={pool, players, boardSets:[], currentPlayer:0, selectedTiles:[],
@@ -696,7 +704,13 @@ function checkTask(taskId){
 }
 
 /* ══════════ RENDER ══════════ */
-function render(){renderScores();renderOpponents();renderBoard();renderControls();renderHand();renderTasks();}
+function render(skipHand=false){renderScores();renderOpponents();renderBoard();renderControls();renderHandLabel();if(!skipHand)renderHand();renderTasks();}
+function renderHandLabel(){
+  const tt=document.getElementById('turn-text'),pi=document.getElementById('played-info');
+  if(!tt) return;
+  tt.textContent=isMyTurn()?'✦ 你的回合':`等待 ${G.players[G.currentPlayer]?.name||'對方'}...`;
+  if(pi) pi.textContent=G.newTilesOnBoard.length>0?`已出${G.newTilesOnBoard.length}張`:'';
+}
 
 function renderScores(){
   document.getElementById('scores').innerHTML=G.players.map((p,i)=>
@@ -795,12 +809,20 @@ function renderBoard(){
   nd.addEventListener('dragleave',()=>nd.classList.remove('drag-over'));
   nd.addEventListener('drop',e=>{e.preventDefault();e.stopPropagation();nd.classList.remove('drag-over');dropNewSet();});
   el.appendChild(nd);
+  // Catch-all: drop on empty board space → create new set (set-groups stop propagation so they won't interfere)
+  if(isMyTurn()){
+    el.addEventListener('dragover',e=>{e.preventDefault();});
+    el.addEventListener('drop',e=>{e.preventDefault();dropNewSet();});
+  }
 }
 function renderHand(){
   const p=G.players[myP()],el=document.getElementById('hand-tiles');
   el.innerHTML='';
   if(isMyTurn()){
-    el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('drag-over');});
+    // Hand area drop: only for board→hand (hand-to-hand is handled per-tile below)
+    el.addEventListener('dragover',e=>{
+      if(dragState&&dragState.src!=='hand'&&dragState.src!=='hand-multi'){e.preventDefault();el.classList.add('drag-over');}
+    });
     el.addEventListener('dragleave',e=>{if(!el.contains(e.relatedTarget))el.classList.remove('drag-over');});
     el.addEventListener('drop',e=>{e.preventDefault();el.classList.remove('drag-over');dropOnHand();});
   }
@@ -809,23 +831,45 @@ function renderHand(){
     const r={tile:t,dispNum:t.isOp?t.op:(t.isJoker?'J':t.number),dispColor:t.isOp?'op':(t.isJoker?'joker':t.color),isJoker:!!t.isJoker,isOp:!!t.isOp};
     const div=makeTileEl(r,false,false,isMyTurn(),
       e=>{
-        saveTurnBackup();
         if(sel&&G.selectedTiles.length>=2){
+          saveTurnBackup();
           dragState={src:'hand-multi',tiles:[...G.selectedTiles],tile:t};
         } else {
-          dragState={src:'hand',tile:t};
+          dragState={src:'hand',tile:t}; // backup saved only if dropped on board
         }
         e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',String(t.id));
         setTimeout(()=>div.classList.add('dragging'),0);
       },
-      ()=>{div.classList.remove('dragging');dragState=null;render();});
+      ()=>{div.classList.remove('dragging');if(dragState){dragState=null;renderHand();renderControls();}});
     if(sel) div.classList.add('selected');
     if(sel&&G.selectedTiles.length>=2) div.title=`拖曳將 ${G.selectedTiles.length} 張選取的牌一起移動`;
     div.addEventListener('click',()=>toggleTile(t.id));
+    // Hand reordering: each tile is a drop target for hand-to-hand drags
+    if(isMyTurn()){
+      div.addEventListener('dragover',e=>{
+        if(dragState&&dragState.src==='hand'&&dragState.tile.id!==t.id){
+          e.preventDefault();e.stopPropagation();div.classList.add('hand-drop-target');
+        }
+      });
+      div.addEventListener('dragleave',()=>div.classList.remove('hand-drop-target'));
+      div.addEventListener('drop',e=>{
+        if(!dragState||dragState.src!=='hand'){return;}
+        e.preventDefault();e.stopPropagation();
+        div.classList.remove('hand-drop-target');
+        reorderHand(dragState.tile.id,t.id);
+      });
+    }
     el.appendChild(div);
   });
-  document.getElementById('turn-text').textContent=isMyTurn()?'✦ 你的回合':`等待 ${G.players[G.currentPlayer].name}...`;
-  document.getElementById('played-info').textContent=G.newTilesOnBoard.length>0?`已出${G.newTilesOnBoard.length}張`:'';
+}
+function reorderHand(fromId,toId){
+  const hand=G.players[myP()].hand;
+  const fi=hand.findIndex(h=>h.id===fromId),ti=hand.findIndex(h=>h.id===toId);
+  if(fi===-1||ti===-1||fi===ti) return;
+  const [tile]=hand.splice(fi,1);
+  hand.splice(ti>fi?ti-1:ti,0,tile);
+  dragState=null;G.selectedTiles=[];
+  renderHand();renderControls();
 }
 function renderControls(){
   const my=isMyTurn(),hm=G.newTilesOnBoard.length>0;
@@ -1052,13 +1096,16 @@ function dropNewSet(){
 }
 function dropOnHand(){
   if(!dragState||!isMyTurn()) return;
+  if(dragState.src==='hand') return; // hand-to-hand reorder handled per-tile in renderHand
   if(dragState.src==='board'){
     const t=dragState.tile;
-    if(!G.newTilesOnBoard.includes(t.id)){setMsg('❌ 原本在桌面的牌不能拖回手牌。','error');return;}
     saveTurnBackup();
-    G.newTilesOnBoard.splice(G.newTilesOnBoard.indexOf(t.id),1);
+    // Remove from newTilesOnBoard tracking if it was a newly placed tile
+    const ni=G.newTilesOnBoard.indexOf(t.id);
+    if(ni>=0) G.newTilesOnBoard.splice(ni,1);
     removeTileFromBoard(dragState.setIdx,dragState.tileIdx);
-    G.players[myP()].hand.push(t);G.selectedTiles=[];render();checkBoardMsg();
+    G.players[myP()].hand.push(t);
+    G.selectedTiles=[];render();checkBoardMsg();
   }
 }
 function checkBoardMsg(){
@@ -1158,6 +1205,14 @@ function confirmTurn(){
   if(!G.newTilesOnBoard.length){setMsg('❌ 你沒有將手牌加入桌面！','error');return;}
   G.boardSets=G.boardSets.map(s=>s.some(t=>t.isOp)?sortExprTiles(s):sortSetTiles(s));
   if(!G.boardSets.every(s=>isValidSet(s))){setMsg('❌ 桌面有不合法組合，已撤銷。','error');undoTurn(true);return;}
+  // Ensure no tile originally on the board is left in hand (would mean stealing a tile)
+  if(G.turnBackup){
+    const origIds=new Set(G.turnBackup.boardSets.flat().map(t=>t.id));
+    const handIds=new Set(G.players[myP()].hand.map(t=>t.id));
+    for(const id of origIds){
+      if(handIds.has(id)){setMsg('❌ 有桌面原有的牌還在手中，請放回桌面再確認。','error');return;}
+    }
+  }
   if(!G.players[myP()].hasPlayed){
     const newIds=new Set(G.newTilesOnBoard);
     const score=calcNewTilesScore(newIds,G.boardSets);
@@ -1202,14 +1257,13 @@ function drawAndSkip(){
 function nextTurn(){
   G.currentPlayer=(G.currentPlayer+1)%G.players.length;
   G.newTilesOnBoard=[];G.turnBackup=null;
+  // Skip hand re-render when it's not my turn (preserves tile order, avoids layout jump)
+  render(G.currentPlayer!==myP());
   if(G.currentPlayer===myP()){
-    render();
     setMsg('✦ 輪到你了！記得點任務卡確認完成！','info');
-    if(isHost()) broadcastState('輪到你了！');
-  } else {
-    // Remote human player's turn — broadcast and wait (no AI)
-    render();
-    if(isHost()) broadcastState(`輪到 ${G.players[G.currentPlayer].name} 出牌！`);
+  }
+  if(isHost()){
+    broadcastState(G.currentPlayer===myP()?'輪到你了！':`輪到 ${G.players[G.currentPlayer].name} 出牌！`);
   }
 }
 
