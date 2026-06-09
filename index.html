@@ -14,7 +14,7 @@ body { background: #e7eef9; color: #383c58; font-family: Georgia, serif; min-hei
 .score-card.active { border-color: #7888b8; background: rgba(80,100,160,0.18); }
 .score-card .sname { color: #7888b8; font-size: 11px; }
 .score-card .scount { font-size: 15px; font-weight: bold; color: #4a5888; }
-.opponents { display: flex; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }
+.opponents { display: flex; gap: 6px; margin-bottom: 6px; }
 .opponent { background: rgba(180,200,230,0.35); border: 1px solid #c0cce8; border-radius: 5px; padding: 4px 7px; font-size: 13px; flex: 1; text-align: center; cursor: pointer; transition: border-color 0.15s; color: #383c58; }
 .opponent:hover { border-color: #7888b8; }
 .opponent.active-turn { border-color: #4a5888; background: rgba(160,185,225,0.45); }
@@ -25,7 +25,7 @@ body { background: #e7eef9; color: #383c58; font-family: Georgia, serif; min-hei
 .board-label { font-size: 13px; color: #4a68a8; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
 .sets-container { display: flex; flex-wrap: wrap; gap: 9px; min-height: 120px; align-content: flex-start; }
 .set-wrapper { display: flex; flex-direction: column; }
-.set-group { display: flex; gap: 5px; background: rgba(180,205,240,0.55); border: 1.5px solid #88aad8; border-radius: 5px; padding: 6px 8px; min-width: 34px; min-height: 58px; align-items: center; transition: border-color 0.15s; }
+.set-group { display: flex; gap: 2px; background: rgba(180,205,240,0.55); border: 1.5px solid #88aad8; border-radius: 5px; padding: 5px 6px; min-width: 34px; min-height: 54px; align-items: center; transition: border-color 0.15s; }
 .set-group.valid-set { border-color: #6a9a48; }
 .set-group.invalid-set { border-color: #88aad8; }
 .set-group.drag-over { border-color: #3055aa !important; background: rgba(60,100,200,0.10) !important; }
@@ -34,7 +34,7 @@ body { background: #e7eef9; color: #383c58; font-family: Georgia, serif; min-hei
 .hand-area { background: rgba(240,245,255,0.70); border: 1px solid #b8c8e8; border-radius: 7px; padding: 7px; margin-bottom: 6px; }
 .hand-top { display: flex; align-items: center; gap: 5px; margin-bottom: 4px; flex-wrap: wrap; }
 .hand-label { font-size: 13px; color: #4a68a8; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
-.hand-tiles { display: flex; flex-wrap: wrap; gap: 8px; min-height: 58px; border-radius: 5px; padding: 5px; transition: background 0.15s; }
+.hand-tiles { display: flex; flex-wrap: wrap; gap: 3px; min-height: 50px; border-radius: 5px; padding: 3px; transition: background 0.15s; }
 .hand-tiles.drag-over { background: rgba(80,100,160,0.04); outline: 1px dashed #7080c0; border-radius: 5px; }
 .task-area { background: rgba(240,245,255,0.70); border: 1px solid #b8c8e8; border-radius: 7px; padding: 9px; margin-bottom: 6px; }
 .task-area-label { font-size: 13px; color: #6878a8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 7px; font-weight: bold; }
@@ -48,8 +48,7 @@ body { background: #e7eef9; color: #383c58; font-family: Georgia, serif; min-hei
 .task-pending { display: none; }
 .task-progress { font-size: 12px; color: #5a6aaa; margin-top: 2px; }
 /* Tiles */
-.tile { width: 36px; height: 52px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 900; border: 2px solid #88aad8; background: #f0f5ff; transition: transform 0.12s, box-shadow 0.12s; cursor: grab; flex-shrink: 0; }
-.tile.hand-drop-target { outline: 3px solid #4a68a8; outline-offset: 2px; transform: translateX(4px); }
+.tile { width: 32px; height: 46px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 900; border: 2px solid #88aad8; background: #f0f5ff; transition: transform 0.12s, box-shadow 0.12s; cursor: grab; flex-shrink: 0; }
 .tile:active { cursor: grabbing; }
 .tile.dragging { opacity: 0.25; }
 .tile.selected { transform: translateY(-6px); box-shadow: 0 4px 8px rgba(60,100,200,0.35); border-color: #3055aa; }
@@ -84,60 +83,10 @@ body { background: #e7eef9; color: #383c58; font-family: Georgia, serif; min-hei
 .modal h3 { font-size: 18px; color: #4a5888; margin-bottom: 8px; }
 .modal p { color: #4a5888; margin-bottom: 12px; font-size: 12px; }
 .modal .stats { font-size: 11px; color: #7888b8; margin-bottom: 12px; line-height: 1.9; }
-.lobby-wrap { display:flex; align-items:center; justify-content:center; min-height:100vh; }
-.lobby-box { background:#e7eef9; border:2px solid #ccd5ec; border-radius:12px; padding:28px 32px; max-width:380px; width:90%; text-align:center; box-shadow:0 4px 20px rgba(60,80,160,0.13); }
-.lobby-box .game-title { font-size:24px; margin-bottom:16px; }
-.lobby-box p { color:#4a5888; font-size:13px; margin-bottom:14px; }
-.lobby-section { margin-top:14px; }
-.lobby-input { width:100%; padding:7px 10px; border:1px solid #b8c8e8; border-radius:4px; font-size:14px; margin:5px 0 10px; font-family:Georgia,serif; background:#f4f7fe; color:#383c58; box-sizing:border-box; }
-.lobby-code { font-size:2.2em; letter-spacing:6px; font-weight:bold; color:#4a5888; background:#dde8f8; border-radius:6px; padding:8px 16px; margin:8px auto; display:inline-block; cursor:pointer; user-select:all; }
-.lobby-status { font-size:12px; color:#7888b8; margin:8px 0; min-height:18px; }
-.btn-gap { gap:8px; display:flex; flex-direction:column; }
 </style>
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 </head>
 <body>
-<div id="lobby" class="lobby-wrap">
-  <div class="lobby-box">
-    <div class="game-title">RUMMIKUB +</div>
-    <div id="lb-mode">
-      <div class="btn-gap">
-        <button class="btn btn-primary btn-large" onclick="showHostSetup()">建立遊戲（主機）</button>
-        <button class="btn btn-secondary btn-large" onclick="showJoinSetup()">加入遊戲</button>
-      </div>
-    </div>
-    <div id="lb-host" style="display:none">
-      <!-- Step 0: host name -->
-      <input class="lobby-input" id="lb-host-name" placeholder="你的名字（最多8字）" maxlength="8" style="margin-top:4px">
-      <!-- Step 1: choose player count -->
-      <div id="lb-count-select">
-        <p style="margin-bottom:10px">總共幾位玩家？</p>
-        <div style="display:flex;gap:8px;justify-content:center">
-          <button class="btn btn-primary btn-large" onclick="createRoom(2)">2人</button>
-          <button class="btn btn-primary btn-large" onclick="createRoom(3)">3人</button>
-          <button class="btn btn-primary btn-large" onclick="createRoom(4)">4人</button>
-        </div>
-      </div>
-      <!-- Step 2: show room code -->
-      <div id="lb-room-info" style="display:none">
-        <p>將代碼分享給其他玩家</p>
-        <div id="lb-code" class="lobby-code" title="點擊複製" onclick="copyCode()">----</div>
-        <div class="lobby-status" id="lb-host-status"></div>
-        <div class="lobby-status" id="lb-conn-status"></div>
-        <button class="btn btn-primary" id="lb-start-btn" onclick="hostStartGame()" disabled style="width:100%;margin-top:8px">開始遊戲</button>
-      </div>
-      <button class="btn" style="background:#aab8d0;color:#fff;width:100%;margin-top:10px" onclick="backToMode()">返回</button>
-    </div>
-    <div id="lb-join" style="display:none">
-      <input class="lobby-input" id="lb-name" placeholder="你的名字（最多8字）" maxlength="8">
-      <input class="lobby-input" id="lb-roomcode" placeholder="輸入房間代碼" maxlength="50" oninput="this.value=this.value.toUpperCase()">
-      <button class="btn btn-primary" onclick="joinGame()" style="width:100%">加入</button>
-      <div class="lobby-status" id="lb-join-status"></div>
-      <button class="btn" style="background:#aab8d0;color:#fff;width:100%;margin-top:6px" onclick="backToMode()">返回</button>
-    </div>
-  </div>
-</div>
-<div id="app" style="display:none">
+<div id="app">
   <div class="game-header">
     <div class="game-title">RUMMIKUB +</div>
     <div id="scores" class="scores"></div>
@@ -179,262 +128,6 @@ const ALL_TASKS=[
 ];
 let G={}, dragState=null, jokerPending=null;
 
-/* ══════════ NETWORK ══════════ */
-let NET={
-  mode:'host',         // 'host' | 'client'
-  peer:null,
-  playerConns:[],      // host side: conn per player index (idx 0=self=null), size=playerCount
-  hostConn:null,       // client side: conn to host
-  myPlayerIndex:0,
-  playerCount:3,       // chosen by host (2-4)
-  myName:'玩家'        // filled from lobby
-};
-function myP(){return NET.myPlayerIndex;}
-function isMyTurn(){return G.currentPlayer===myP()&&!G.gameOver;}
-function isHost(){return NET.mode==='host';}
-function isClient(){return NET.mode==='client';}
-
-/* ── Lobby UI helpers ── */
-function showHostSetup(){
-  document.getElementById('lb-mode').style.display='none';
-  document.getElementById('lb-host').style.display='block';
-}
-function createRoom(count){
-  NET.myName=document.getElementById('lb-host-name').value.trim()||'玩家1';
-  NET.playerCount=count;
-  NET.playerConns=new Array(count).fill(null); // index 0=host(null), 1..count-1=remote slots
-  NET.mode='host';
-  document.getElementById('lb-count-select').style.display='none';
-  document.getElementById('lb-room-info').style.display='block';
-  document.getElementById('lb-host-status').textContent='連線中，請稍候...';
-  const roomId='RMK-'+Math.random().toString(36).slice(2,8).toUpperCase();
-  const peer=new Peer(roomId);
-  NET.peer=peer;
-  peer.on('open',id=>{
-    document.getElementById('lb-code').textContent=id;
-    updateConnStatus();updateStartBtn();
-  });
-  peer.on('error',e=>{document.getElementById('lb-host-status').textContent='連線錯誤：'+e.type;});
-  peer.on('connection',conn=>{
-    const slotIdx=NET.playerConns.findIndex((c,i)=>i>0&&c===null);
-    if(slotIdx===-1){conn.send({type:'room_full'});conn.close();return;}
-    NET.playerConns[slotIdx]=conn;
-    conn.on('open',()=>{
-      conn.send({type:'slot_assigned',playerIndex:slotIdx,playerCount:count});
-      updateConnStatus();updateStartBtn();
-    });
-    conn.on('data',msg=>handleClientMessage(slotIdx,msg));
-    conn.on('close',()=>{
-      if(document.getElementById('lobby').style.display!=='none'){
-        NET.playerConns[slotIdx]=null;updateConnStatus();updateStartBtn();
-      } else if(!G.gameOver){
-        setMsg(`${G.players[slotIdx]?.name||'玩家'} 已離線，遊戲中止。`,'error');
-        G.gameOver=true;render();
-      }
-    });
-  });
-}
-function updateConnStatus(){
-  const joined=NET.playerConns.filter(c=>c!==null).length;
-  const need=NET.playerCount-1;
-  document.getElementById('lb-host-status').textContent=`等待玩家加入（需要 ${need} 人）`;
-  document.getElementById('lb-conn-status').textContent=`已加入：${joined}／${need} 人`;
-}
-function updateStartBtn(){
-  const joined=NET.playerConns.filter(c=>c!==null).length;
-  document.getElementById('lb-start-btn').disabled=joined<NET.playerCount-1;
-}
-function copyCode(){
-  const code=document.getElementById('lb-code').textContent;
-  navigator.clipboard&&navigator.clipboard.writeText(code);
-  document.getElementById('lb-host-status').textContent='代碼已複製！';
-}
-function showJoinSetup(){
-  document.getElementById('lb-mode').style.display='none';
-  document.getElementById('lb-join').style.display='block';
-}
-function backToMode(){
-  if(NET.peer){NET.peer.destroy();NET.peer=null;}
-  NET.mode='host';NET.playerConns=[];NET.hostConn=null;NET.myPlayerIndex=0;NET.playerCount=3;
-  document.getElementById('lb-count-select').style.display='block';
-  document.getElementById('lb-room-info').style.display='none';
-  document.getElementById('lb-host').style.display='none';
-  document.getElementById('lb-join').style.display='none';
-  document.getElementById('lb-mode').style.display='block';
-}
-function joinGame(){
-  const name=document.getElementById('lb-name').value.trim()||'玩家';
-  NET.myName=name;
-  const code=document.getElementById('lb-roomcode').value.trim();
-  if(!code){document.getElementById('lb-join-status').textContent='請輸入代碼';return;}
-  document.getElementById('lb-join-status').textContent='連線中...';
-  const peer=new Peer();
-  NET.peer=peer;NET.mode='client';
-  peer.on('open',()=>{
-    const conn=peer.connect(code);
-    NET.hostConn=conn;
-    conn.on('open',()=>{
-      conn.send({type:'hello',name});
-      document.getElementById('lb-join-status').textContent='已連線！等待主機開始遊戲...';
-    });
-    conn.on('data',msg=>handleHostMessage(msg));
-    conn.on('error',e=>{document.getElementById('lb-join-status').textContent='連線失敗：'+e;});
-    conn.on('close',()=>{if(!G.gameOver)setMsg('與主機連線中斷，遊戲中止。','error');});
-  });
-  peer.on('error',e=>{document.getElementById('lb-join-status').textContent='錯誤：'+e.type;});
-}
-function hostStartGame(){
-  hideLobby();
-  initGame(); // initGame() calls broadcastState() at end → sends state_update to all clients
-}
-function hideLobby(){
-  document.getElementById('lobby').style.display='none';
-  document.getElementById('app').style.display='block';
-}
-
-/* ── Host broadcasts state to all clients ── */
-function broadcastState(msgText,winnerIdx){
-  if(NET.mode!=='host') return;
-  const publicState={
-    boardSets:G.boardSets,
-    currentPlayer:G.currentPlayer,
-    playerNames:G.players.map(p=>p.name),
-    playerHandCounts:G.players.map(p=>p.hand.length),
-    playerHasPlayed:G.players.map(p=>p.hasPlayed),
-    poolCount:G.pool.length,
-    gameOver:G.gameOver,
-    winnerIdx:winnerIdx!=null?winnerIdx:-1,
-    aiPlacedThisRound:[...G.aiPlacedThisRound],
-    playerPlacedIds:[...G.playerPlacedIds]
-  };
-  NET.playerConns.forEach((conn,pi)=>{
-    if(!conn) return;
-    conn.send({
-      type:'state_update',
-      publicState,
-      privateHand:G.players[pi].hand,
-      privateTasks:G.players[pi].tasks,
-      playerIndex:pi,
-      msg:msgText
-    });
-  });
-}
-
-/* ── Host receives action from client ── */
-function handleClientMessage(playerIdx,msg){
-  if(msg.type==='hello'){
-    NET.playerConns[playerIdx]._peerName=msg.name;
-    // Update player name immediately if game already started
-    if(G.players&&G.players[playerIdx]) G.players[playerIdx].name=msg.name;
-    updateConnStatus();updateStartBtn();
-    return;
-  }
-  if(msg.type==='confirm_turn'){
-    if(G.currentPlayer!==playerIdx){return;}
-    // Validate board legality before accepting
-    if(!msg.boardSets.every(s=>isValidSet(s))){
-      NET.playerConns[playerIdx].send({type:'error',msg:'❌ 桌面有不合法組合，請修正。'});return;
-    }
-    if(!G.players[playerIdx].hasPlayed){
-      const newIds=new Set(msg.newTilesOnBoard);
-      const score=calcNewTilesScore(newIds,msg.boardSets);
-      if(score<30){
-        NET.playerConns[playerIdx].send({type:'error',msg:`❌ 首次出牌需30分，目前${score}分。`});return;
-      }
-    }
-    G.players[playerIdx].hand=msg.hand;
-    G.boardSets=msg.boardSets;
-    msg.newTilesOnBoard.forEach(id=>G.playerPlacedIds.add(id));
-    G.players[playerIdx].hasPlayed=true;
-    if(msg.tasks) G.players[playerIdx].tasks=msg.tasks;
-    G.newTilesOnBoard=[];G.turnBackup=null;G.selectedTiles=[];G.aiPlacedThisRound=new Set();
-    if(G.players[playerIdx].hand.length===0&&G.players[playerIdx].tasks.every(t=>t.done)){
-      endGame(playerIdx);return;
-    }
-    nextTurn();
-  }
-  if(msg.type==='draw_turn'){
-    if(G.currentPlayer!==playerIdx) return;
-    if(G.pool.length>0){
-      const tile=G.pool.pop();
-      G.players[playerIdx].hand.push(tile);
-      NET.playerConns[playerIdx].send({type:'drew_tile',tile});
-    }
-    G.aiPlacedThisRound=new Set();
-    nextTurn();
-  }
-}
-
-/* ── Client receives state from host ── */
-function handleHostMessage(msg){
-  if(msg.type==='slot_assigned'){
-    NET.myPlayerIndex=msg.playerIndex;
-    NET.playerCount=msg.playerCount||3;
-    document.getElementById('lb-join-status').textContent=`已入座（玩家 ${msg.playerIndex}），等待主機開始...`;
-    return;
-  }
-  if(msg.type==='room_full'){
-    document.getElementById('lb-join-status').textContent='❌ 房間已滿，請確認代碼或等待下一局。';
-    return;
-  }
-  if(msg.type==='game_start'){
-    NET.myPlayerIndex=msg.playerIndex; // state_update will handle rendering
-    return;
-  }
-  if(msg.type==='state_update'){
-    // Automatically switch from lobby to game on first state_update
-    if(document.getElementById('lobby').style.display!=='none'){
-      if(msg.playerIndex!=null) NET.myPlayerIndex=msg.playerIndex;
-      hideLobby();
-    }
-    const ps=msg.publicState;
-    G.boardSets=ps.boardSets;
-    G.currentPlayer=ps.currentPlayer;
-    G.gameOver=ps.gameOver;
-    G.aiPlacedThisRound=new Set(ps.aiPlacedThisRound||[]);
-    G.playerPlacedIds=new Set(ps.playerPlacedIds||[]);
-    G.pool=Array(ps.poolCount).fill({id:-1,color:'back',number:0,isFake:true});
-    if(!G.players||G.players.length!==ps.playerNames.length){
-      G.players=ps.playerNames.map(()=>({name:'?',hand:[],tasks:[],hasPlayed:false,revealHand:false}));
-    }
-    ps.playerNames.forEach((name,i)=>{
-      G.players[i].name=name;
-      G.players[i].hasPlayed=ps.playerHasPlayed[i];
-      G.players[i].revealHand=false;
-      if(i===NET.myPlayerIndex){
-        G.players[i].hand=msg.privateHand;
-        G.players[i].tasks=msg.privateTasks;
-      } else {
-        G.players[i].hand=Array(ps.playerHandCounts[i]).fill(null).map((_,j)=>({id:-(i*1000+j),color:'back',number:0,isJoker:false,isOp:false,isFake:true}));
-        G.players[i].tasks=[];
-      }
-    });
-    // Always ensure local turn state exists; reset only on my turn
-    if(G.currentPlayer===myP()){
-      G.newTilesOnBoard=[];G.turnBackup=null;G.selectedTiles=[];
-    } else {
-      if(!G.newTilesOnBoard) G.newTilesOnBoard=[];
-      if(!G.selectedTiles) G.selectedTiles=[];
-      if(G.turnBackup===undefined) G.turnBackup=null;
-    }
-    // Skip hand re-render when it's not my turn (avoids flicker/layout jump)
-    render(G.currentPlayer!==myP());
-    if(msg.msg) setMsg(msg.msg,G.currentPlayer===myP()?'success':'info');
-    if(ps.winnerIdx>=0) setTimeout(()=>endGame(ps.winnerIdx),300);
-    return;
-  }
-  if(msg.type==='drew_tile'){
-    G.players[myP()].hand.push(msg.tile);
-    // Only append tile to hand without disturbing the rest of the layout
-    renderHand(); renderScores();
-    return;
-  }
-  if(msg.type==='error'){
-    setMsg(msg.msg,'error');
-    return;
-  }
-}
-
 /* ══════════ INIT ══════════ */
 function initGame(){
   let pool=[], id=0;
@@ -447,13 +140,10 @@ function initGame(){
   shuffle(pool);
   const ts=shuffle([...ALL_TASKS]);
   let players=[];
-  const n=NET.playerCount||3;
-  for(let i=0;i<n;i++){
+  for(let i=0;i<3;i++){
     const def=ts[i % ts.length];
     const myTask={...def, done:false, progress:0};
-    const connName=NET.playerConns[i]&&NET.playerConns[i]._peerName;
-    const name=i===0?NET.myName:(connName||`玩家${i+1}`);
-    players.push({name, hand:pool.splice(0,14), hasPlayed:false, tasks:[myTask], revealHand:false});
+    players.push({name:i===0?'你':['電腦1','電腦2'][i-1], hand:pool.splice(0,14), hasPlayed:false, tasks:[myTask], revealHand:false});
   }
   G={pool, players, boardSets:[], currentPlayer:0, selectedTiles:[],
      turnBackup:null, newTilesOnBoard:[], aiPlacedThisRound:new Set(),
@@ -461,7 +151,6 @@ function initGame(){
   jokerPending=null;
   hideModal(); render();
   setMsg('遊戲開始！首次出牌需30分以上（數字牌＋運算式均可計入）。','info');
-  if(NET.mode==='host') broadcastState('新遊戲開始！');
 }
 function shuffle(a){for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function clone(x){return JSON.parse(JSON.stringify(x));}
@@ -692,7 +381,7 @@ function checkTaskForIds(taskId, newIds){
   }
   if(taskId==='two_expr'){
     // 累計模式：取 task 的 progress，加上本回合新算式數量
-    const task=G.players[myP()].tasks.find(t=>t.id==='two_expr');
+    const task=G.players[0].tasks.find(t=>t.id==='two_expr');
     const alreadyDone=task?task.progress:0;
     const newExprs=countNewExprs(newIds);
     return (alreadyDone+newExprs)>=(task?.target||2);
@@ -704,23 +393,15 @@ function checkTask(taskId){
 }
 
 /* ══════════ RENDER ══════════ */
-function render(skipHand=false){renderScores();renderOpponents();renderBoard();renderControls();renderHandLabel();if(!skipHand)renderHand();renderTasks();}
-function renderHandLabel(){
-  const tt=document.getElementById('turn-text'),pi=document.getElementById('played-info');
-  if(!tt) return;
-  tt.textContent=isMyTurn()?'✦ 你的回合':`等待 ${G.players[G.currentPlayer]?.name||'對方'}...`;
-  if(pi) pi.textContent=G.newTilesOnBoard.length>0?`已出${G.newTilesOnBoard.length}張`:'';
-}
+function render(){renderScores();renderOpponents();renderBoard();renderControls();renderHand();renderTasks();}
 
 function renderScores(){
   document.getElementById('scores').innerHTML=G.players.map((p,i)=>
     `<div class="score-card ${G.currentPlayer===i?'active':''}"><div class="sname">${p.name}</div><div class="scount">${p.hand.length}</div></div>`).join('');
 }
 function renderOpponents(){
-  document.getElementById('opponents').innerHTML=G.players.map((p,pi)=>{
-    if(pi===myP()) return '';
-    const canReveal=isHost(); // only host knows real tiles
-    const rev=p.revealHand&&canReveal;
+  document.getElementById('opponents').innerHTML=G.players.filter((_,i)=>i!==0).map((p,oi)=>{
+    const pi=oi+1,rev=p.revealHand;
     let handHtml;
     if(rev){
       handHtml='<div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;margin-top:2px">'+
@@ -735,9 +416,8 @@ function renderOpponents(){
     } else {
       handHtml='<div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;margin-top:2px">'+p.hand.map(()=>'<div class="tile-back"></div>').join('')+'</div>';
     }
-    const revHint=canReveal?` onclick="toggleReveal(${pi})" title="點擊查看/隱藏"`:'';
-    return `<div class="opponent ${G.currentPlayer===pi?'active-turn':''}"${revHint}>
-      <div class="opp-name">${p.name}${G.currentPlayer===pi?' ⭐':''} ${canReveal?`<span style="font-size:8px;color:#667">${rev?'▲':'▼'}</span>`:''}</div>
+    return `<div class="opponent ${G.currentPlayer===pi?'active-turn':''}" onclick="toggleReveal(${pi})" title="點擊查看/隱藏">
+      <div class="opp-name">${p.name}${G.currentPlayer===pi?' ⭐':''} <span style="font-size:8px;color:#667">${rev?'▲':'▼'}</span></div>
       <div class="opp-tiles">${p.hand.length}張</div>${handHtml}</div>`;
   }).join('');
 }
@@ -778,10 +458,10 @@ function renderBoard(){
     groupEl.className=`set-group ${hasTurn?(valid?'valid-set':'invalid-set'):''}`;
     disp.forEach((r,ti)=>{
       const t=r.tile,isNew=G.newTilesOnBoard.includes(t.id);
-      const isAi=G.currentPlayer===myP()&&G.aiPlacedThisRound.has(t.id)&&!isNew;
-      const d=makeTileEl(r,isNew,isAi,isMyTurn(),
+      const isAi=G.currentPlayer===0&&G.aiPlacedThisRound.has(t.id)&&!isNew;
+      const d=makeTileEl(r,isNew,isAi,G.currentPlayer===0&&!G.gameOver,
         e=>{
-          if(!isMyTurn()) return;
+          if(G.currentPlayer!==0||G.gameOver) return;
           saveTurnBackup();
           // Tail drag only when Shift is explicitly held — normal drag always moves single tile
           const isTailDrag=e.shiftKey&&disp.length-ti>=2;
@@ -809,70 +489,41 @@ function renderBoard(){
   nd.addEventListener('dragleave',()=>nd.classList.remove('drag-over'));
   nd.addEventListener('drop',e=>{e.preventDefault();e.stopPropagation();nd.classList.remove('drag-over');dropNewSet();});
   el.appendChild(nd);
-  // Catch-all: drop on empty board space → create new set (set-groups stop propagation so they won't interfere)
-  if(isMyTurn()){
-    el.addEventListener('dragover',e=>{e.preventDefault();});
-    el.addEventListener('drop',e=>{e.preventDefault();dropNewSet();});
-  }
 }
 function renderHand(){
-  const p=G.players[myP()],el=document.getElementById('hand-tiles');
+  const p=G.players[0],el=document.getElementById('hand-tiles');
   el.innerHTML='';
-  if(isMyTurn()){
-    // Hand area drop: only for board→hand (hand-to-hand is handled per-tile below)
-    el.addEventListener('dragover',e=>{
-      if(dragState&&dragState.src!=='hand'&&dragState.src!=='hand-multi'){e.preventDefault();el.classList.add('drag-over');}
-    });
+  if(G.currentPlayer===0&&!G.gameOver){
+    el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('drag-over');});
     el.addEventListener('dragleave',e=>{if(!el.contains(e.relatedTarget))el.classList.remove('drag-over');});
     el.addEventListener('drop',e=>{e.preventDefault();el.classList.remove('drag-over');dropOnHand();});
   }
   p.hand.forEach(t=>{
     const sel=G.selectedTiles.find(s=>s.id===t.id);
     const r={tile:t,dispNum:t.isOp?t.op:(t.isJoker?'J':t.number),dispColor:t.isOp?'op':(t.isJoker?'joker':t.color),isJoker:!!t.isJoker,isOp:!!t.isOp};
-    const div=makeTileEl(r,false,false,isMyTurn(),
+    const div=makeTileEl(r,false,false,G.currentPlayer===0&&!G.gameOver,
       e=>{
+        saveTurnBackup();
+        // If this tile is selected AND there are multiple selected tiles, drag all of them
         if(sel&&G.selectedTiles.length>=2){
-          saveTurnBackup();
           dragState={src:'hand-multi',tiles:[...G.selectedTiles],tile:t};
         } else {
-          dragState={src:'hand',tile:t}; // backup saved only if dropped on board
+          dragState={src:'hand',tile:t};
         }
         e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',String(t.id));
         setTimeout(()=>div.classList.add('dragging'),0);
       },
-      ()=>{div.classList.remove('dragging');if(dragState){dragState=null;renderHand();renderControls();}});
+      ()=>{div.classList.remove('dragging');dragState=null;render();});
     if(sel) div.classList.add('selected');
     if(sel&&G.selectedTiles.length>=2) div.title=`拖曳將 ${G.selectedTiles.length} 張選取的牌一起移動`;
     div.addEventListener('click',()=>toggleTile(t.id));
-    // Hand reordering: each tile is a drop target for hand-to-hand drags
-    if(isMyTurn()){
-      div.addEventListener('dragover',e=>{
-        if(dragState&&dragState.src==='hand'&&dragState.tile.id!==t.id){
-          e.preventDefault();e.stopPropagation();div.classList.add('hand-drop-target');
-        }
-      });
-      div.addEventListener('dragleave',()=>div.classList.remove('hand-drop-target'));
-      div.addEventListener('drop',e=>{
-        if(!dragState||dragState.src!=='hand'){return;}
-        e.preventDefault();e.stopPropagation();
-        div.classList.remove('hand-drop-target');
-        reorderHand(dragState.tile.id,t.id);
-      });
-    }
     el.appendChild(div);
   });
-}
-function reorderHand(fromId,toId){
-  const hand=G.players[myP()].hand;
-  const fi=hand.findIndex(h=>h.id===fromId),ti=hand.findIndex(h=>h.id===toId);
-  if(fi===-1||ti===-1||fi===ti) return;
-  const [tile]=hand.splice(fi,1);
-  hand.splice(ti>fi?ti-1:ti,0,tile);
-  dragState=null;G.selectedTiles=[];
-  renderHand();renderControls();
+  document.getElementById('turn-text').textContent=G.currentPlayer===0?'✦ 你的回合':`等待 ${G.players[G.currentPlayer].name}...`;
+  document.getElementById('played-info').textContent=G.newTilesOnBoard.length>0?`已出${G.newTilesOnBoard.length}張`:'';
 }
 function renderControls(){
-  const my=isMyTurn(),hm=G.newTilesOnBoard.length>0;
+  const my=G.currentPlayer===0&&!G.gameOver,hm=G.newTilesOnBoard.length>0;
   document.getElementById('controls').innerHTML=`
     <button class="btn btn-primary btn-large" ${!my||G.selectedTiles.length<3?'disabled':''} onclick="playSelectedSet()">出這組</button>
     <button class="btn btn-end btn-large" ${!my||!hm?'disabled':''} onclick="confirmTurn()">確認出牌</button>
@@ -883,9 +534,9 @@ function renderControls(){
 
 /* ══════════ TASK JUDGE ══════════ */
 function judgeTask(ti){
-  const task=G.players[myP()].tasks[ti];
+  const task=G.players[0].tasks[ti];
   if(task.done){setMsg('此任務已完成！','info');return;}
-  if(!isMyTurn()){setMsg('只能在你的回合判定任務。','warn');return;}
+  if(G.currentPlayer!==0){setMsg('只能在你的回合判定任務。','warn');return;}
   if(G.newTilesOnBoard.length===0){setMsg('❌ 你本回合還沒有放任何牌上桌，無法判定任務。','error');return;}
   const newIds=new Set(G.newTilesOnBoard);
   if(task.id==='two_expr'){
@@ -912,12 +563,12 @@ function judgeTask(ti){
   }
 }
 function checkWinCondition(){
-  const p=G.players[myP()];
+  const p=G.players[0];
   if(p.hand.length===0&&p.tasks.every(t=>t.done)) endGame(0);
 }
 
 function renderTasks(){
-  const el=document.getElementById('task-list'),p=G.players[myP()];
+  const el=document.getElementById('task-list'),p=G.players[0];
   el.innerHTML='';
   p.tasks.forEach((task,ti)=>{
     const div=document.createElement('div');
@@ -973,7 +624,7 @@ window.resolveJokerChoice=function(pos){
   if(window._jokerChoiceCallback){window._jokerChoiceCallback(pos);window._jokerChoiceCallback=null;}
 };
 function saveTurnBackup(){
-  if(!G.turnBackup) G.turnBackup={hand:clone(G.players[myP()].hand),boardSets:clone(G.boardSets),hasPlayed:G.players[myP()].hasPlayed};
+  if(!G.turnBackup) G.turnBackup={hand:clone(G.players[0].hand),boardSets:clone(G.boardSets),hasPlayed:G.players[0].hasPlayed};
 }
 function removeTileFromBoard(setIdx,tileDisplayIdx){
   const set=G.boardSets[setIdx],disp=resolveSetDisplay(set);
@@ -984,15 +635,15 @@ function removeTileFromBoard(setIdx,tileDisplayIdx){
   return {leftLen:lt.length,rightLen:rt.length};
 }
 function dropOnSet(ti){
-  if(!dragState||!isMyTurn()) return;
+  if(!dragState||G.currentPlayer!==0) return;
   saveTurnBackup();
 
   // ── hand-multi: drag multiple selected hand tiles ──
   if(dragState.src==='hand-multi'){
     const tiles=dragState.tiles;
     tiles.forEach(t=>{
-      const idx=G.players[myP()].hand.findIndex(h=>h.id===t.id);
-      if(idx>=0){G.players[myP()].hand.splice(idx,1);G.newTilesOnBoard.push(t.id);}
+      const idx=G.players[0].hand.findIndex(h=>h.id===t.id);
+      if(idx>=0){G.players[0].hand.splice(idx,1);G.newTilesOnBoard.push(t.id);}
       G.boardSets[ti].push(t);
     });
     G.selectedTiles=[];render();checkBoardMsg();
@@ -1026,8 +677,8 @@ function dropOnSet(ti){
   // ── single hand tile ──
   const t=dragState.tile;
   if(dragState.src==='hand'){
-    const idx=G.players[myP()].hand.findIndex(h=>h.id===t.id);
-    if(idx>=0){G.players[myP()].hand.splice(idx,1);G.newTilesOnBoard.push(t.id);}
+    const idx=G.players[0].hand.findIndex(h=>h.id===t.id);
+    if(idx>=0){G.players[0].hand.splice(idx,1);G.newTilesOnBoard.push(t.id);}
     if(t.isJoker&&G.boardSets[ti]){
       const targetSet=[...G.boardSets[ti]];
       G.boardSets[ti].push(t);
@@ -1060,14 +711,14 @@ function dropOnSet(ti){
   G.selectedTiles=[];render();checkBoardMsg();
 }
 function dropNewSet(){
-  if(!dragState||!isMyTurn()) return;
+  if(!dragState||G.currentPlayer!==0) return;
   saveTurnBackup();
 
   if(dragState.src==='hand-multi'){
     const tiles=dragState.tiles;
     tiles.forEach(t=>{
-      const idx=G.players[myP()].hand.findIndex(h=>h.id===t.id);
-      if(idx>=0){G.players[myP()].hand.splice(idx,1);G.newTilesOnBoard.push(t.id);}
+      const idx=G.players[0].hand.findIndex(h=>h.id===t.id);
+      if(idx>=0){G.players[0].hand.splice(idx,1);G.newTilesOnBoard.push(t.id);}
     });
     G.boardSets.push([...tiles]);
     G.selectedTiles=[];render();checkBoardMsg();
@@ -1088,24 +739,21 @@ function dropNewSet(){
 
   const t=dragState.tile;
   if(dragState.src==='hand'){
-    const idx=G.players[myP()].hand.findIndex(h=>h.id===t.id);
-    if(idx>=0){G.players[myP()].hand.splice(idx,1);G.newTilesOnBoard.push(t.id);}
+    const idx=G.players[0].hand.findIndex(h=>h.id===t.id);
+    if(idx>=0){G.players[0].hand.splice(idx,1);G.newTilesOnBoard.push(t.id);}
     G.boardSets.push([t]);
   } else {removeTileFromBoard(dragState.setIdx,dragState.tileIdx);G.boardSets.push([t]);}
   G.selectedTiles=[];render();checkBoardMsg();
 }
 function dropOnHand(){
-  if(!dragState||!isMyTurn()) return;
-  if(dragState.src==='hand') return; // hand-to-hand reorder handled per-tile in renderHand
+  if(!dragState||G.currentPlayer!==0) return;
   if(dragState.src==='board'){
     const t=dragState.tile;
+    if(!G.newTilesOnBoard.includes(t.id)){setMsg('❌ 原本在桌面的牌不能拖回手牌。','error');return;}
     saveTurnBackup();
-    // Remove from newTilesOnBoard tracking if it was a newly placed tile
-    const ni=G.newTilesOnBoard.indexOf(t.id);
-    if(ni>=0) G.newTilesOnBoard.splice(ni,1);
+    G.newTilesOnBoard.splice(G.newTilesOnBoard.indexOf(t.id),1);
     removeTileFromBoard(dragState.setIdx,dragState.tileIdx);
-    G.players[myP()].hand.push(t);
-    G.selectedTiles=[];render();checkBoardMsg();
+    G.players[0].hand.push(t);G.selectedTiles=[];render();checkBoardMsg();
   }
 }
 function checkBoardMsg(){
@@ -1116,8 +764,8 @@ function checkBoardMsg(){
 
 /* ══════════ PLAYER ACTIONS ══════════ */
 function toggleTile(id){
-  if(!isMyTurn()) return;
-  const t=G.players[myP()].hand.find(h=>h.id===id);if(!t) return;
+  if(G.currentPlayer!==0||G.gameOver) return;
+  const t=G.players[0].hand.find(h=>h.id===id);if(!t) return;
   const idx=G.selectedTiles.findIndex(s=>s.id===id);
   if(idx>=0) G.selectedTiles.splice(idx,1);else G.selectedTiles.push(t);
   renderHand();renderControls();
@@ -1130,7 +778,7 @@ function toggleTile(id){
   else setMsg('選牌或拖曳到桌面。');
 }
 function playSelectedSet(){
-  if(!isMyTurn()||G.selectedTiles.length<3) return;
+  if(G.currentPlayer!==0||G.selectedTiles.length<3) return;
   let tiles=[...G.selectedTiles];
   const hasEq=tiles.some(t=>t.isOp&&t.op==='=');
   const valid=hasEq?isValidExpr(tiles):isValidSet(tiles);
@@ -1158,9 +806,9 @@ function playSelectedSet(){
           if(pos) jokerToAsk.jokerHint=pos;
           const sorted=sortSetTiles(tiles);
           saveTurnBackup();
-          sorted.forEach(t=>{const i=G.players[myP()].hand.findIndex(h=>h.id===t.id);if(i>=0){G.players[myP()].hand.splice(i,1);G.newTilesOnBoard.push(t.id);}});
+          sorted.forEach(t=>{const i=G.players[0].hand.findIndex(h=>h.id===t.id);if(i>=0){G.players[0].hand.splice(i,1);G.newTilesOnBoard.push(t.id);}});
           G.boardSets.push(sorted);G.selectedTiles=[];
-          if(G.players[myP()].hand.length===0){render();setTimeout(autoJudgeTasksAndCheck,100);return;}
+          if(G.players[0].hand.length===0){render();setTimeout(autoJudgeTasksAndCheck,100);return;}
           render();setMsg('✓ 放置成功！','success');
         });
         return;
@@ -1170,9 +818,9 @@ function playSelectedSet(){
 
   saveTurnBackup();
   const sorted=hasEq?tiles:sortSetTiles(tiles);
-  sorted.forEach(t=>{const i=G.players[myP()].hand.findIndex(h=>h.id===t.id);if(i>=0){G.players[myP()].hand.splice(i,1);G.newTilesOnBoard.push(t.id);}});
+  sorted.forEach(t=>{const i=G.players[0].hand.findIndex(h=>h.id===t.id);if(i>=0){G.players[0].hand.splice(i,1);G.newTilesOnBoard.push(t.id);}});
   G.boardSets.push(sorted);G.selectedTiles=[];
-  if(G.players[myP()].hand.length===0){render();setTimeout(autoJudgeTasksAndCheck,100);return;}
+  if(G.players[0].hand.length===0){render();setTimeout(autoJudgeTasksAndCheck,100);return;}
   render();setMsg('✓ 放置成功！','success');
 }
 
@@ -1180,7 +828,7 @@ function autoJudgeTasks(){
   // Auto-judge all incomplete tasks at confirm time
   if(G.newTilesOnBoard.length===0) return;
   const newIds=new Set(G.newTilesOnBoard);
-  const p=G.players[myP()];
+  const p=G.players[0];
   p.tasks.forEach(task=>{
     if(task.done) return;
     if(task.id==='two_expr'){
@@ -1201,69 +849,56 @@ function autoJudgeTasksAndCheck(){
 }
 
 function confirmTurn(){
-  if(G.currentPlayer!==myP()) return;
+  if(G.currentPlayer!==0) return;
   if(!G.newTilesOnBoard.length){setMsg('❌ 你沒有將手牌加入桌面！','error');return;}
   G.boardSets=G.boardSets.map(s=>s.some(t=>t.isOp)?sortExprTiles(s):sortSetTiles(s));
   if(!G.boardSets.every(s=>isValidSet(s))){setMsg('❌ 桌面有不合法組合，已撤銷。','error');undoTurn(true);return;}
-  // Ensure no tile originally on the board is left in hand (would mean stealing a tile)
-  if(G.turnBackup){
-    const origIds=new Set(G.turnBackup.boardSets.flat().map(t=>t.id));
-    const handIds=new Set(G.players[myP()].hand.map(t=>t.id));
-    for(const id of origIds){
-      if(handIds.has(id)){setMsg('❌ 有桌面原有的牌還在手中，請放回桌面再確認。','error');return;}
-    }
-  }
-  if(!G.players[myP()].hasPlayed){
+  if(!G.players[0].hasPlayed){
     const newIds=new Set(G.newTilesOnBoard);
-    const score=calcNewTilesScore(newIds,G.boardSets);
+    const score=calcNewTilesScore(newIds, G.boardSets);
     if(score<30){setMsg(`❌ 首次出牌需至少30分（含運算式），本回合只有${score}分，已撤銷。`,'error');undoTurn(true);return;}
   }
+  // Auto-judge tasks before clearing newTilesOnBoard
   autoJudgeTasks();
-  if(isClient()){
-    NET.hostConn.send({type:'confirm_turn',hand:G.players[myP()].hand,boardSets:G.boardSets,newTilesOnBoard:G.newTilesOnBoard,tasks:G.players[myP()].tasks});
-    G.newTilesOnBoard=[];G.turnBackup=null;G.selectedTiles=[];
-    setMsg('✓ 已送出！等待主機確認...','info');render();return;
-  }
   G.newTilesOnBoard.forEach(id=>G.playerPlacedIds.add(id));
-  G.players[myP()].hasPlayed=true;
+  G.players[0].hasPlayed=true;
   G.newTilesOnBoard=[];G.turnBackup=null;G.selectedTiles=[];G.aiPlacedThisRound=new Set();
   render();
-  if(G.players[myP()].hand.length===0){
-    if(G.players[myP()].tasks.every(t=>t.done)){endGame(myP());return;}
+  if(G.players[0].hand.length===0){
+    if(G.players[0].tasks.every(t=>t.done)){endGame(0);return;}
     setMsg('手牌已出完！但任務尚未完成，繼續等待…','warn');
   } else {
-    const doneTasks=G.players[myP()].tasks.filter(t=>t.done).length;
-    const totalTasks=G.players[myP()].tasks.length;
+    const doneTasks=G.players[0].tasks.filter(t=>t.done).length;
+    const totalTasks=G.players[0].tasks.length;
     setMsg(`✓ 回合確認！任務進度：${doneTasks}/${totalTasks}。`,'info');
   }
   nextTurn();
 }
 function undoTurn(silent=false){
-  if(G.turnBackup){G.players[myP()].hand=clone(G.turnBackup.hand);G.boardSets=clone(G.turnBackup.boardSets);G.players[myP()].hasPlayed=G.turnBackup.hasPlayed;}
+  if(G.turnBackup){G.players[0].hand=clone(G.turnBackup.hand);G.boardSets=clone(G.turnBackup.boardSets);G.players[0].hasPlayed=G.turnBackup.hasPlayed;}
   G.newTilesOnBoard=[];G.turnBackup=null;G.selectedTiles=[];
   if(!silent) setMsg('已撤銷本回合所有改動。','info');render();
 }
 function drawAndSkip(){
-  if(!isMyTurn()) return;
+  if(G.currentPlayer!==0||G.gameOver) return;
   if(G.newTilesOnBoard.length>0){setMsg('❌ 已有出牌，請按「確認出牌」或「撤銷」。','error');return;}
-  if(isClient()){
-    NET.hostConn.send({type:'draw_turn'});
-    setMsg('已送出摸牌請求...','info');return;
-  }
-  if(G.pool.length>0){G.players[myP()].hand.push(G.pool.pop());setMsg(`摸了一張牌，現有${G.players[myP()].hand.length}張。`,'info');}
-  else setMsg('牌池已空！換下一位玩家。','warn');
+  if(G.pool.length>0){G.players[0].hand.push(G.pool.pop());setMsg(`摸了一張牌，現有${G.players[0].hand.length}張。`,'info');}
+  else setMsg('牌池已空！請再檢查手上是否有牌可以出。換下一位玩家。','warn');
   G.turnBackup=null;G.selectedTiles=[];G.aiPlacedThisRound=new Set();nextTurn();
 }
 function nextTurn(){
   G.currentPlayer=(G.currentPlayer+1)%G.players.length;
   G.newTilesOnBoard=[];G.turnBackup=null;
-  // Skip hand re-render when it's not my turn (preserves tile order, avoids layout jump)
-  render(G.currentPlayer!==myP());
-  if(G.currentPlayer===myP()){
+  // Do NOT clear aiPlacedThisRound here — it should persist until player confirms
+  // It is only cleared when: player confirms turn, player draws/skips, or a new AI turn begins
+  if(G.currentPlayer===0){
+    render();
     setMsg('✦ 輪到你了！記得點任務卡確認完成！','info');
-  }
-  if(isHost()){
-    broadcastState(G.currentPlayer===myP()?'輪到你了！':`輪到 ${G.players[G.currentPlayer].name} 出牌！`);
+  } else {
+    // Before each AI turn, reset that AI's contribution (so only last AI's moves show orange)
+    // Actually we want to show ALL AI moves since player's last turn — so accumulate
+    render();
+    setTimeout(aiTurn,900);
   }
 }
 
@@ -1943,14 +1578,12 @@ function calcOp(a,b,op){
 
 function endGame(wi){
   G.gameOver=true;const w=G.players[wi];
-  if(isHost()) broadcastState('遊戲結束！',wi);
   const stats=G.players.map(p=>`${p.name}：${p.hand.length}張剩餘，任務 ${p.tasks.filter(t=>t.done).length}/${p.tasks.length} 完成`).join('<br>');
-  const restartBtn=isHost()||NET.mode==='local'?`<button class="btn btn-primary" onclick="initGame()" style="width:100%;margin-top:8px">再來一局</button>`:`<p style="font-size:12px;color:#7888b8">等待主機重新開始...</p>`;
-  showModal(`<h3>遊戲結束！</h3><p>${w.name} ${w.tasks.every(t=>t.done)?'完成任務並出完手牌，獲得勝利！':'出完手牌但任務未全部完成。'}</p><div class="stats">${stats}</div>${restartBtn}`);
+  showModal(`<h3>遊戲結束！</h3><p>${w.name} ${w.tasks.every(t=>t.done)?'完成任務並出完手牌，獲得勝利！':'出完手牌但任務未全部完成。'}</p><div class="stats">${stats}</div><button class="btn btn-primary" onclick="initGame()" style="width:100%;margin-top:8px">再來一局</button>`);
   render();
 }
 function sortHand(by){
-  const h=G.players[myP()].hand;
+  const h=G.players[0].hand;
   if(by==='color') h.sort((a,b)=>{if(a.isOp&&!b.isOp) return 1;if(!a.isOp&&b.isOp) return -1;if(a.isOp) return a.op<b.op?-1:1;return COLORS.indexOf(a.color)-COLORS.indexOf(b.color)||a.number-b.number;});
   else h.sort((a,b)=>{if(a.isOp&&!b.isOp) return 1;if(!a.isOp&&b.isOp) return -1;if(a.isOp) return a.op<b.op?-1:1;return a.number-b.number||COLORS.indexOf(a.color)-COLORS.indexOf(b.color);});
   G.selectedTiles=[];renderHand();renderControls();
@@ -1963,11 +1596,11 @@ function showRules(){
 <b style="color:#4a5888">首次出牌30分</b><br>• 數字組合：新放牌的面值加總<br>• 算式：算式內所有數字牌面值加總<br>• 例：8=7+1=8=4*2 → 8+7+1+8+4+2=30 ✓<br>• 例：4+5=9 → 4+5+9=18（不足30）<br><br>
 <b style="color:#4a5888">Joker 規則</b><br>• Joker 可以移動，前提是移走後剩餘牌仍合法<br>• 例：5 5 5 J → J可移走（555仍合法）<br><br>
 <b style="color:#4a5888">任務卡</b><br>① 偶數和：本回合有一合法組合點數和為偶數<br>② 兩個算式：本回合出了2個以上算式<br><br>
-<b style="color:#4a5888">查看其他玩家牌面</b><br>主機可點擊對手欄位翻開/隱藏其手牌</div>
+<b style="color:#4a5888">查看電腦牌面</b><br>點擊電腦名字框可翻開/隱藏其手牌與任務</div>
 <button class="btn btn-primary" onclick="hideModal()" style="width:100%;margin-top:10px">了解！</button>`);
 }
 function setMsg(t,type=''){const el=document.getElementById('msg-bar');el.className='msg-bar'+(type?' '+type:'');el.textContent=t;}
-// Game starts from the lobby — no auto-init
+initGame();
 </script>
 </body>
 </html>
